@@ -14,7 +14,7 @@
   :root{
     --bg:#000;
     --panel:#111;
-    --cell-border:#DAA520;
+    --cell-border:#555;
     --overlay-bg:rgba(0,0,0,0.88);
     --text:#fff;
     --muted:#999;
@@ -84,7 +84,7 @@
   }
 
   td, th{
-    border:2px solid var(--cell-border);
+    border:3px solid var(--cell-border);
     padding:8px;
     text-align:center;
     font-weight:bold;
@@ -999,14 +999,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if(state.rodando) return;
     registrarRodadaAtual();
     state.sorteados = [];
-    state.ultimoSorteado = null;
-    state.historico = [];
     gerarTabela();
-    renderHistorico();
     atualizarDisplay("--", "");
     publicarEstado();
   });
   btnPDF.addEventListener("click", exportarPDF);
+
+  gerarTabela();
+  atualizarDisplay("--", "");
 });
 </script>
 </body>
