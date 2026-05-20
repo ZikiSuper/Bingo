@@ -18,6 +18,11 @@
     --overlay-bg:rgba(0,0,0,0.88);
     --text:#fff;
     --muted:#999;
+    --cell-padding: 8px;
+    --cell-min-width: 44px;
+    --cell-height: 44px;
+    --font-display: clamp(60px, 12vw, 160px);
+    --overlay-font: 160px;
   }
 
   body{
@@ -42,6 +47,7 @@
     font-weight:bold;
     background:#fff;
     color:#000;
+    transition: background 0.2s ease, color 0.2s ease;
   }
 
   button.active{
@@ -60,7 +66,7 @@
     justify-content:center;
     height:30vh;
     font-weight:bold;
-    font-size:clamp(60px, 12vw, 160px);
+    font-size:var(--font-display);
     color:#fff;
   }
 
@@ -85,11 +91,11 @@
 
   td, th{
     border:3px solid var(--cell-border);
-    padding:8px;
+    padding:var(--cell-padding);
     text-align:center;
     font-weight:bold;
-    min-width:44px;
-    height:44px;
+    min-width:var(--cell-min-width);
+    height:var(--cell-height);
     color:#fff !important;
     background:rgba(255,255,255,0.04);
     transition:background .12s ease, transform .12s ease, box-shadow .12s ease;
@@ -120,7 +126,7 @@
     display:flex;
     align-items:center;
     justify-content:center;
-    font-size:160px;
+    font-size:var(--overlay-font);
     background:var(--overlay-bg);
     opacity:0;
     pointer-events:none;
@@ -208,19 +214,12 @@
   }
 
   @media (max-width:900px){
-    table td, table th{
-      padding:6px;
-      min-width:36px;
-      height:36px;
-    }
-
-    .display{
-      font-size:clamp(48px, 18vw, 120px);
-      height:22vh;
-    }
-
-    #overlay{
-      font-size:96px;
+    :root {
+      --cell-padding: 6px;
+      --cell-min-width: 36px;
+      --cell-height: 36px;
+      --font-display: clamp(48px, 18vw, 120px);
+      --overlay-font: 96px;
     }
   }
 
@@ -246,6 +245,14 @@
   }
 
   @media (max-width:600px){
+    :root {
+      --cell-padding: 5px;
+      --cell-min-width: 30px;
+      --cell-height: 30px;
+      --font-display: clamp(48px, 20vw, 100px);
+      --overlay-font: 72px;
+    }
+
     .topo{
       display:grid;
       grid-template-columns:1fr 1fr;
@@ -261,11 +268,6 @@
       margin:0;
     }
 
-    .display{
-      font-size:clamp(48px, 20vw, 100px);
-      height:20vh;
-    }
-
     .item{
       font-size:18px;
       margin:3px;
@@ -276,23 +278,19 @@
       margin:8px auto;
     }
 
-    td, th{
-      padding:5px;
-      min-width:30px;
-      height:30px;
-      font-size:12px;
-    }
-
     td.letra{
       width:36px;
-    }
-
-    #overlay{
-      font-size:72px;
     }
   }
 
   @media (max-width:480px){
+    :root {
+      --cell-padding: 4px;
+      --cell-min-width: 26px;
+      --cell-height: 26px;
+      --font-display: clamp(36px, 18vw, 100px);
+    }
+
     button{
       padding:14px 6px;
       font-size:12px;
@@ -303,21 +301,21 @@
       height:18vh;
     }
 
-    td, th{
-      padding:4px;
-      min-width:26px;
-      height:26px;
-      font-size:11px;
-    }
-
     .topo{
       gap:6px;
       padding:8px;
     }
   }
 
-  /* Fix para celulares pequenos: Poco M3 Pro, Galaxy A12, iPhone SE */
   @media (max-width:390px){
+    :root {
+      --cell-padding: 3px;
+      --cell-min-width: 24px;
+      --cell-height: 24px;
+      --font-display: clamp(36px, 16vw, 80px);
+      --overlay-font: 60px;
+    }
+
     .topo{
       grid-template-columns: 1fr 1fr;
       gap: 4px;
@@ -333,14 +331,6 @@
 
     .display{
       height: 18vh;
-      font-size: clamp(36px, 16vw, 80px);
-    }
-
-    td, th{
-      padding: 3px;
-      min-width: 24px;
-      height: 24px;
-      font-size: 10px;
     }
 
     td.letra{
@@ -379,73 +369,150 @@
       max-width: 100%;
       flex: 1;
     }
-
-    #overlay{
-      font-size: 60px;
-    }
   }
 
-  /* Extra pequeno: <= 320px (raro, mas cobre casos extremos) */
   @media (max-width:320px){
+    :root {
+      --cell-padding: 2px;
+      --cell-min-width: 20px;
+      --cell-height: 20px;
+      --font-display: clamp(32px, 14vw, 64px);
+      --overlay-font: 48px;
+    }
+
     button{
       padding: 10px 2px;
       font-size: 10px;
       min-height: 40px;
     }
 
-    td, th{
-      padding: 2px;
-      min-width: 20px;
-      height: 20px;
-      font-size: 9px;
-    }
-
-    .display{
-      font-size: clamp(32px, 14vw, 64px);
-      height: 16vh;
-    }
-
     .dialog h3{
       font-size: 14px;
-    }
-
-    #overlay{
-      font-size: 48px;
     }
   }
 </style>
 </head>
 <body>
   <div class="topo">
-    <button id="btnSortear">🎲 Sortear</button>
-    <button id="btnRepetir">🔁 Repetir</button>
-    <button id="btnModo">🖥️ / 📱 Modo</button>
-    <button id="btnAuto">🎤 Auto</button>
-    <button id="btnNovo">🔄 Nova Rodada</button>
-    <button id="btnPDF">📄 PDF</button>
+    <button id="btnSortear" aria-label="Sortear um novo número">🎲 Sortear</button>
+    <button id="btnRepetir" aria-label="Repetir o último número sorteado">🔁 Repetir</button>
+    <button id="btnModo" aria-label="Alternar entre modo desktop e mobile">🖥️ / 📱 Modo</button>
+    <button id="btnAuto" aria-label="Ativar modo de sorteio automático">🎤 Auto</button>
+    <button id="btnNovo" aria-label="Iniciar uma nova rodada de sorteios">🔄 Nova Rodada</button>
+    <button id="btnPDF" aria-label="Exportar relatório em PDF">📄 PDF</button>
   </div>
 
-  <div class="display" id="display">--</div>
-  <div class="historico" id="lista"></div>
-  <table><tbody id="numeros"></tbody></table>
-  <div id="overlay" aria-live="polite" aria-hidden="true"></div>
+  <div class="display" id="display" role="status" aria-live="polite">--</div>
+  <div class="historico" id="lista" role="region" aria-label="Histórico de números sorteados"></div>
+  <table role="grid" aria-label="Tabela de números do bingo"><tbody id="numeros"></tbody></table>
+  <div id="overlay" aria-live="assertive" aria-hidden="true" role="status"></div>
 
-  <div id="dialogOverlay" class="dialog-overlay">
+  <div id="dialogOverlay" class="dialog-overlay" role="dialog" aria-modal="true">
     <div class="dialog">
       <h3 id="dialogTitle">Tempo entre sorteios</h3>
-      <input type="number" id="dialogInput" min="0.5" step="0.5" placeholder="Segundos" />
+      <input type="number" id="dialogInput" min="0.5" step="0.5" placeholder="Segundos" aria-label="Tempo em segundos" />
       <div class="dialog-buttons">
-        <button id="dialogCancel">Cancelar</button>
-        <button id="dialogOk">OK</button>
+        <button id="dialogCancel" aria-label="Cancelar diálogo">Cancelar</button>
+        <button id="dialogOk" aria-label="Confirmar entrada">OK</button>
       </div>
     </div>
   </div>
 
 <script>
+/**
+ * Sistema de gerenciamento de síntese de fala
+ */
+class SpeechManager {
+  constructor() {
+    this.isSupported = "speechSynthesis" in window;
+  }
+
+  /**
+   * Fala um texto
+   * @param {string} text - Texto para falar
+   * @param {string} lang - Idioma (padrão: pt-BR)
+   * @param {number} rate - Velocidade (padrão: 0.8)
+   * @returns {Promise<void>}
+   */
+  async speak(text, lang = "pt-BR", rate = 0.8) {
+    if (!this.isSupported) return;
+    
+    return new Promise((resolve) => {
+      try {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = lang;
+        utterance.rate = rate;
+        utterance.onend = resolve;
+        utterance.onerror = () => {
+          console.warn("Erro ao falar:", text);
+          resolve();
+        };
+        speechSynthesis.speak(utterance);
+      } catch (e) {
+        console.warn("Erro ao iniciar fala:", e);
+        resolve();
+      }
+    });
+  }
+
+  /**
+   * Cancela a fala atual
+   */
+  cancel() {
+    if (this.isSupported) {
+      try {
+        speechSynthesis.cancel();
+      } catch (e) {
+        console.warn("Erro ao cancelar fala:", e);
+      }
+    }
+  }
+}
+
+/**
+ * Gerenciador de cache de elementos DOM
+ */
+class ElementCache {
+  constructor() {
+    this.cache = new Map();
+  }
+
+  get(id) {
+    if (!this.cache.has(id)) {
+      const element = document.getElementById(id);
+      if (!element) {
+        console.warn(`Elemento não encontrado: ${id}`);
+      }
+      this.cache.set(id, element);
+    }
+    return this.cache.get(id);
+  }
+
+  clear() {
+    this.cache.clear();
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
-  const L = ["B","I","N","G","O"];
-  const X = [40, 120, 200, 280, 360];
-  const CFG = { TOTAL_DURATION_MS:2200, PAUSA_LETRA_NUM_MS:180, FALA_RATE:.8, DRAMATIC_PART_PAUSE_MS:220 };
+  // ========== CONSTANTES ==========
+  const LETTERS = ["B", "I", "N", "G", "O"];
+  const X_POSITIONS = [40, 120, 200, 280, 360];
+
+  const CONFIG = {
+    TOTAL_NUMBERS: 75,
+    ROWS: 5,
+    COLS: 15,
+    ANIMATION: { duration: 700, easing: "ease-out" },
+    AUDIO: { rate: 0.8 },
+    TIMING: {
+      totalDuration: 2200,
+      letterNumberPause: 180,
+      dramaticPause: 220
+    },
+    HISTORY_SIZE: 5,
+    AUTO_DELAY_DEFAULT: 5000,
+    ROULETTE_TICK: 60
+  };
 
   const STRINGS = {
     ORG_NAME: "ASSOCIAÇÃO DE PAIS E MESTRES",
@@ -463,9 +530,11 @@ document.addEventListener("DOMContentLoaded", () => {
     AUTO_GENERATED: "Documento oficial gerado automaticamente para conferência do sorteio.",
     JSPDF_NOT_FOUND: "Biblioteca jsPDF não encontrada.",
     PAGE: "Página ",
-    OF: " de "
+    OF: " de ",
+    INVALID_TIME: "Informe um valor válido (maior que 0)."
   };
 
+  // ========== STATE ==========
   const state = {
     sorteados: [],
     modo: "pc",
@@ -474,39 +543,72 @@ document.addEventListener("DOMContentLoaded", () => {
     rodadaAtual: 1,
     rodando: false,
     autoMode: false,
-    autoDelayMs: 5000,
+    autoDelayMs: CONFIG.AUTO_DELAY_DEFAULT,
     historico: []
   };
 
+  // ========== INSTANCES ==========
+  const speechManager = new SpeechManager();
+  const elementCache = new ElementCache();
   const $ = id => document.getElementById(id);
-  const display = $("display"), lista = $("lista"), overlay = $("overlay"), tbody = $("numeros");
-  const btnSortear = $("btnSortear"), btnRepetir = $("btnRepetir"), btnModo = $("btnModo"), btnAuto = $("btnAuto"), btnNovo = $("btnNovo"), btnPDF = $("btnPDF");
 
-  // Cache de elementos para melhor performance
-  const elementCache = new Map();
-  const getElement = (id) => {
-    if (!elementCache.has(id)) {
-      elementCache.set(id, document.getElementById(id));
-    }
-    return elementCache.get(id);
-  };
+  // ========== DOM ELEMENTS ==========
+  const display = $("display");
+  const lista = $("lista");
+  const overlay = $("overlay");
+  const tbody = $("numeros");
+  const btnSortear = $("btnSortear");
+  const btnRepetir = $("btnRepetir");
+  const btnModo = $("btnModo");
+  const btnAuto = $("btnAuto");
+  const btnNovo = $("btnNovo");
+  const btnPDF = $("btnPDF");
 
-  const clearElementCache = () => elementCache.clear();
-
-  // Verificação de capacidades do navegador
-  const canSpeak = "speechSynthesis" in window;
+  // ========== BROWSER CAPABILITIES ==========
   const hasBroadcastChannel = "BroadcastChannel" in window;
+  const canal = hasBroadcastChannel ? new BroadcastChannel("bingo_bingo_sync") : null;
 
+  // ========== UTILITIES ==========
   const delay = ms => new Promise(r => setTimeout(r, ms));
-  const letra = n => n<=15 ? "B" : n<=30 ? "I" : n<=45 ? "N" : n<=60 ? "G" : "O";
 
-  const limparFala = () => { 
-    if(canSpeak) try{ speechSynthesis.cancel(); }catch(e){ console.warn("Erro ao limpar fala:", e); }
+  /**
+   * Retorna a letra (B, I, N, G, O) correspondente ao número
+   * @param {number} n - Número de 1 a 75
+   * @returns {string} Uma das letras B, I, N, G, O
+   */
+  const getLetterFromNumber = n => {
+    if (n <= 15) return "B";
+    if (n <= 30) return "I";
+    if (n <= 45) return "N";
+    if (n <= 60) return "G";
+    return "O";
   };
 
-  const atualizarDisplay = (txt, cls) => display.innerHTML = `<span class="${cls}">${txt}</span>`;
+  /**
+   * Gera um número aleatório não sorteado
+   * @returns {number} Número entre 1 e 75
+   */
+  const generateRandomNumber = () => {
+    let number;
+    do {
+      number = Math.floor(Math.random() * CONFIG.TOTAL_NUMBERS) + 1;
+    } while (state.sorteados.includes(number));
+    return number;
+  };
 
-  function renderHistorico(){
+  /**
+   * Atualiza o display principal
+   * @param {string} txt - Texto a exibir
+   * @param {string} cls - Classe CSS (letra)
+   */
+  const updateDisplay = (txt, cls) => {
+    display.innerHTML = `<span class="${cls}">${txt}</span>`;
+  };
+
+  /**
+   * Renderiza o histórico de números sorteados
+   */
+  const renderHistory = () => {
     lista.innerHTML = "";
     state.historico.forEach(item => {
       const el = document.createElement("div");
@@ -514,27 +616,46 @@ document.addEventListener("DOMContentLoaded", () => {
       el.innerText = item.txt;
       lista.appendChild(el);
     });
-  }
-
-  const adicionarHistorico = (txt, cls) => {
-    state.historico.unshift({ txt, cls });
-    state.historico = state.historico.slice(0, 5);
-    renderHistorico();
   };
 
+  /**
+   * Adiciona um número ao histórico
+   * @param {string} txt - Texto do número
+   * @param {string} cls - Classe CSS (letra)
+   */
+  const addToHistory = (txt, cls) => {
+    state.historico.unshift({ txt, cls });
+    state.historico = state.historico.slice(0, CONFIG.HISTORY_SIZE);
+    renderHistory();
+  };
+
+  /**
+   * Mostra o overlay com o número
+   * @param {string} txt - Número para exibir
+   */
   const showOverlay = txt => {
     overlay.textContent = txt;
     overlay.classList.add("show");
-    overlay.setAttribute("aria-hidden","false");
+    overlay.setAttribute("aria-hidden", "false");
   };
 
+  /**
+   * Esconde o overlay
+   */
   const hideOverlay = () => {
     overlay.classList.remove("show");
-    overlay.setAttribute("aria-hidden","true");
+    overlay.setAttribute("aria-hidden", "true");
   };
 
-  // Dialog customizado para melhor UX
-  const showDialog = (title, defaultValue = "") => {
+  /**
+   * Mostra um diálogo customizado
+   * @param {string} title - Título do diálogo
+   * @param {Object} options - Opções { min, max, step, defaultValue }
+   * @returns {Promise<number|null>} Valor inserido ou null
+   */
+  const showDialog = (title, options = {}) => {
+    const { min = 0.5, max = 999, step = 0.5, defaultValue = "" } = options;
+
     return new Promise(resolve => {
       const dialogOverlay = $("dialogOverlay");
       const dialogTitle = $("dialogTitle");
@@ -544,6 +665,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       dialogTitle.textContent = title;
       dialogInput.value = defaultValue;
+      dialogInput.min = min;
+      dialogInput.max = max;
+      dialogInput.step = step;
 
       const cleanup = () => {
         dialogOverlay.classList.remove("show");
@@ -553,9 +677,13 @@ document.addEventListener("DOMContentLoaded", () => {
       };
 
       const handleOk = () => {
-        const value = dialogInput.value.trim();
+        const value = parseFloat(dialogInput.value);
+        if (isNaN(value) || value < min || value > max) {
+          alert(`${STRINGS.INVALID_TIME} (mín: ${min}, máx: ${max})`);
+          return;
+        }
         cleanup();
-        resolve(value || null);
+        resolve(value);
       };
 
       const handleCancel = () => {
@@ -564,8 +692,8 @@ document.addEventListener("DOMContentLoaded", () => {
       };
 
       const handleKeypress = (e) => {
-        if(e.key === "Enter") handleOk();
-        if(e.key === "Escape") handleCancel();
+        if (e.key === "Enter") handleOk();
+        if (e.key === "Escape") handleCancel();
       };
 
       dialogOk.addEventListener("click", handleOk);
@@ -577,156 +705,210 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   };
 
-  function marcarCelula(n){
-    const el = getElement("n"+n);
-    if(!el) return;
+  /**
+   * Marca uma célula da tabela como sorteada
+   * @param {number} n - Número da célula
+   */
+  const markCell = (n) => {
+    const el = elementCache.get("n" + n);
+    if (!el) return;
+
     el.classList.add("destacado");
     el.classList.remove("roulette");
-    try{
+
+    try {
       el.animate(
         [
-          { transform:"scale(1.08)", boxShadow:"0 0 22px rgba(255,255,255,0.9)" },
-          { transform:"scale(1)", boxShadow:"0 0 8px rgba(255,255,255,0.35)" }
+          { transform: "scale(1.08)", boxShadow: "0 0 22px rgba(255,255,255,0.9)" },
+          { transform: "scale(1)", boxShadow: "0 0 8px rgba(255,255,255,0.35)" }
         ],
-        { duration:700, iterations:1, easing:"ease-out" }
+        { duration: CONFIG.ANIMATION.duration, iterations: 1, easing: CONFIG.ANIMATION.easing }
       );
-    }catch(e){ console.warn("Erro na animação:", e); }
-  }
+    } catch (e) {
+      console.warn("Erro na animação:", e);
+    }
+  };
 
-  function gerarTabela(){
+  /**
+   * Gera a tabela de bingo
+   */
+  const generateTable = () => {
     let html = "";
-    if(state.modo === "pc"){
-      for(let l=0; l<5; l++){
-        html += "<tr><td class='letra'>"+L[l]+"</td>";
-        for(let c=0; c<15; c++){
-          const num = l*15 + c + 1;
-          html += `<td id="n${num}" class="${L[l]}">${num}</td>`;
+
+    if (state.modo === "pc") {
+      for (let l = 0; l < CONFIG.ROWS; l++) {
+        html += "<tr><td class='letra'>" + LETTERS[l] + "</td>";
+        for (let c = 0; c < CONFIG.COLS; c++) {
+          const num = l * CONFIG.COLS + c + 1;
+          html += `<td id="n${num}" class="${LETTERS[l]}">${num}</td>`;
         }
         html += "</tr>";
       }
-    }else{
-      html += "<tr>" + L.map(h => `<th>${h}</th>`).join("") + "</tr>";
-      for(let i=1; i<=15; i++){
+    } else {
+      html += "<tr>" + LETTERS.map(h => `<th>${h}</th>`).join("") + "</tr>";
+      for (let i = 1; i <= CONFIG.COLS; i++) {
         html += "<tr>";
         html += `<td id="n${i}" class="B">${i}</td>`;
-        html += `<td id="n${i+15}" class="I">${i+15}</td>`;
-        html += `<td id="n${i+30}" class="N">${i+30}</td>`;
-        html += `<td id="n${i+45}" class="G">${i+45}</td>`;
-        html += `<td id="n${i+60}" class="O">${i+60}</td>`;
+        html += `<td id="n${i + 15}" class="I">${i + 15}</td>`;
+        html += `<td id="n${i + 30}" class="N">${i + 30}</td>`;
+        html += `<td id="n${i + 45}" class="G">${i + 45}</td>`;
+        html += `<td id="n${i + 60}" class="O">${i + 60}</td>`;
         html += "</tr>";
       }
     }
+
     tbody.innerHTML = html;
-    clearElementCache(); // Limpar cache quando tabela é regenerada
-    state.sorteados.forEach(n => getElement("n"+n)?.classList.add("destacado"));
-  }
-
-  function dramaticSpeak(parts=["Agora...","O número é"], lang="pt-BR", onPartEnd=null){
-    return new Promise(resolve => {
-      if(!canSpeak) return resolve();
-      const queue = parts.slice();
-      let index = 0;
-      const next = () => {
-        if(!queue.length) return resolve();
-        const partIndex = index++;
-        const msg = new SpeechSynthesisUtterance(queue.shift());
-        msg.lang = lang;
-        msg.rate = CFG.FALA_RATE;
-        msg.onend = () => {
-          if(typeof onPartEnd === "function") try{ onPartEnd(partIndex); }catch(e){ console.warn("Erro no callback:", e); }
-          setTimeout(next, CFG.DRAMATIC_PART_PAUSE_MS);
-        };
-        try{ speechSynthesis.speak(msg); }catch(e){ console.warn("Erro ao falar:", e); setTimeout(next, CFG.DRAMATIC_PART_PAUSE_MS); }
-      };
-      next();
+    elementCache.clear();
+    state.sorteados.forEach(n => {
+      const el = elementCache.get("n" + n);
+      if (el) el.classList.add("destacado");
     });
-  }
+  };
 
-  function falarNumero(n){
-    return new Promise(resolve => {
-      if(!canSpeak) return resolve();
-      try{
-        const m = { B:"bê", I:"i", N:"ene", G:"gê", O:"ó" };
-        const Lf = m[letra(n)] || letra(n);
-        const u1 = new SpeechSynthesisUtterance(Lf);
-        const u2 = new SpeechSynthesisUtterance(n.toLocaleString("pt-BR"));
-        u1.lang = u2.lang = "pt-BR";
-        u1.rate = u2.rate = CFG.FALA_RATE;
-        u2.onend = resolve;
-        u1.onend = () => setTimeout(() => {
-          try{ speechSynthesis.speak(u2); }catch(e){ console.warn("Erro ao falar número:", e); resolve(); }
-        }, CFG.PAUSA_LETRA_NUM_MS);
-        try{ speechSynthesis.speak(u1); }catch(e){ console.warn("Erro ao iniciar fala:", e); resolve(); }
-      }catch(e){ console.warn("Erro geral em falarNumero:", e); resolve(); }
+  /**
+   * Fala partes de forma dramática com pausas
+   * @param {string[]} parts - Partes para falar
+   * @param {Function} onPartEnd - Callback ao final de cada parte
+   * @returns {Promise<void>}
+   */
+  const dramaticSpeak = async (parts = ["Agora...", "O número é"], onPartEnd = null) => {
+    const queue = [...parts];
+    let index = 0;
+
+    while (queue.length > 0) {
+      const partIndex = index++;
+      await speechManager.speak(queue.shift(), "pt-BR", CONFIG.AUDIO.rate);
+
+      if (typeof onPartEnd === "function") {
+        try {
+          onPartEnd(partIndex);
+        } catch (e) {
+          console.warn("Erro no callback:", e);
+        }
+      }
+
+      if (queue.length > 0) {
+        await delay(CONFIG.TIMING.dramaticPause);
+      }
+    }
+  };
+
+  /**
+   * Fala o número com sua letra
+   * @param {number} n - Número para falar
+   * @returns {Promise<void>}
+   */
+  const speakNumber = async (n) => {
+    const letterMap = { B: "bê", I: "i", N: "ene", G: "gê", O: "ó" };
+    const letter = getLetterFromNumber(n);
+    const letterText = letterMap[letter] || letter;
+
+    await speechManager.speak(letterText, "pt-BR", CONFIG.AUDIO.rate);
+    await delay(CONFIG.TIMING.letterNumberPause);
+    await speechManager.speak(n.toLocaleString("pt-BR"), "pt-BR", CONFIG.AUDIO.rate);
+  };
+
+  /**
+   * Inicia a roleta visual na tabela
+   * @param {number} tickInterval - Intervalo em ms
+   * @returns {Object} { promise, stop }
+   */
+  const startTableRoulette = (tickInterval = CONFIG.ROULETTE_TICK) => {
+    let intervalId = null;
+    let prevEl = null;
+    let stopped = false;
+    let resolvePromise;
+
+    const promise = new Promise(r => {
+      resolvePromise = r;
     });
-  }
 
-  function startTableRoulette(tickInterval=60){
-    let iv = null, prevEl = null, stopped = false, resolvePromise;
-    const promise = new Promise(r => { resolvePromise = r; });
+    intervalId = setInterval(() => {
+      if (stopped) return;
+      if (prevEl) prevEl.classList.remove("roulette");
 
-    iv = setInterval(() => {
-      if(stopped) return;
-      prevEl?.classList.remove("roulette");
-      const num = Math.floor(Math.random()*75)+1;
-      const el = getElement("n"+num);
-      if(el){ el.classList.add("roulette"); prevEl = el; }
+      const num = Math.floor(Math.random() * CONFIG.TOTAL_NUMBERS) + 1;
+      const el = elementCache.get("n" + num);
+      if (el) {
+        el.classList.add("roulette");
+        prevEl = el;
+      }
     }, tickInterval);
 
-    const stop = finalNum => {
-      if(stopped) return;
+    const stop = (finalNum) => {
+      if (stopped) return;
       stopped = true;
-      clearInterval(iv);
-      prevEl?.classList.remove("roulette");
-      const finalEl = getElement("n"+finalNum);
-      if(finalEl){
+      clearInterval(intervalId);
+
+      if (prevEl) prevEl.classList.remove("roulette");
+
+      const finalEl = elementCache.get("n" + finalNum);
+      if (finalEl) {
         finalEl.classList.add("roulette");
         setTimeout(() => finalEl.classList.remove("roulette"), 120);
       }
+
       resolvePromise();
     };
 
     return { promise, stop };
-  }
+  };
 
-  function snapshotEstado(){
-    return {
-      sorteados: [...state.sorteados],
-      modo: state.modo,
-      ultimoSorteado: state.ultimoSorteado,
-      rodadas: state.rodadas.map(r => ({
-        numero: r.numero,
-        sorteados: [...r.sorteados],
-        data: r.data
-      })),
-      rodadaAtual: state.rodadaAtual,
-      historico: state.historico.map(h => ({ txt: h.txt, cls: h.cls })),
-      autoMode: state.autoMode,
-      autoDelayMs: state.autoDelayMs
-    };
-  }
+  /**
+   * Cria snapshot do estado
+   * @returns {Object} Estado serializado
+   */
+  const snapshotState = () => ({
+    sorteados: [...state.sorteados],
+    modo: state.modo,
+    ultimoSorteado: state.ultimoSorteado,
+    rodadas: state.rodadas.map(r => ({
+      numero: r.numero,
+      sorteados: [...r.sorteados],
+      data: r.data
+    })),
+    rodadaAtual: state.rodadaAtual,
+    historico: state.historico.map(h => ({ txt: h.txt, cls: h.cls })),
+    autoMode: state.autoMode,
+    autoDelayMs: state.autoDelayMs
+  });
 
-  function publicarEstado(){
-    if(canal) try{ canal.postMessage({ type:"state", payload: snapshotEstado() }); }catch(e){ console.warn("Erro ao publicar estado:", e); }
-  }
+  /**
+   * Publica o estado para outras abas
+   */
+  const publishState = () => {
+    if (canal) {
+      try {
+        canal.postMessage({ type: "state", payload: snapshotState() });
+      } catch (e) {
+        console.warn("Erro ao publicar estado:", e);
+      }
+    }
+  };
 
-  function atualizarBotaoAuto(){
+  /**
+   * Atualiza o botão auto mode
+   */
+  const updateAutoButton = () => {
     btnAuto.classList.toggle("active", state.autoMode);
     btnAuto.textContent = state.autoMode ? "⏹ Auto" : "🎤 Auto";
-  }
+  };
 
-  const canal = hasBroadcastChannel ? new BroadcastChannel("bingo_bingo_sync") : null;
+  // ========== SYNC ENTRE ABAS ==========
+  let autoTimer = null;
 
-  if(canal){
-    canal.onmessage = ev => {
+  if (canal) {
+    canal.onmessage = (ev) => {
       const data = ev.data || {};
-      if(data.type === "request-state"){
-        publicarEstado();
+
+      if (data.type === "request-state") {
+        publishState();
         return;
       }
-      if(data.type === "state"){
+
+      if (data.type === "state") {
         const payload = data.payload;
-        if(!payload) return;
+        if (!payload) return;
 
         state.sorteados = [...(payload.sorteados || [])];
         state.modo = payload.modo || "pc";
@@ -738,275 +920,384 @@ document.addEventListener("DOMContentLoaded", () => {
         }));
         state.rodadaAtual = payload.rodadaAtual || 1;
         state.historico = (payload.historico || []).map(h => ({ txt: h.txt, cls: h.cls }));
-        if(typeof payload.autoMode === "boolean") state.autoMode = payload.autoMode;
-        if(typeof payload.autoDelayMs === "number") state.autoDelayMs = payload.autoDelayMs;
+        if (typeof payload.autoMode === "boolean") state.autoMode = payload.autoMode;
+        if (typeof payload.autoDelayMs === "number") state.autoDelayMs = payload.autoDelayMs;
 
-        gerarTabela();
-        renderHistorico();
-        atualizarBotaoAuto();
-        atualizarDisplay(state.ultimoSorteado ? (letra(state.ultimoSorteado) + state.ultimoSorteado) : "--", state.ultimoSorteado ? letra(state.ultimoSorteado) : "");
+        generateTable();
+        renderHistory();
+        updateAutoButton();
+        updateDisplay(
+          state.ultimoSorteado ? getLetterFromNumber(state.ultimoSorteado) + state.ultimoSorteado : "--",
+          state.ultimoSorteado ? getLetterFromNumber(state.ultimoSorteado) : ""
+        );
       }
     };
   }
 
-  let autoTimer = null;
-
-  function agendarProximoAuto(){
+  /**
+   * Agenda o próximo sorteio automático
+   */
+  const scheduleNextAuto = () => {
     clearTimeout(autoTimer);
-    if(!state.autoMode || state.sorteados.length >= 75) return;
+    if (!state.autoMode || state.sorteados.length >= CONFIG.TOTAL_NUMBERS) return;
+
     autoTimer = setTimeout(() => {
-      sortear();
+      draw();
     }, state.autoDelayMs);
-  }
+  };
 
-  async function dramaticReveal(finalNum, txt){
+  /**
+   * Reveala o número de forma dramática
+   * @param {number} finalNum - Número sorteado
+   * @param {string} txt - Texto para exibir
+   */
+  const dramaticReveal = async (finalNum, txt) => {
     hideOverlay();
-    const roulette = startTableRoulette(Math.max(30, Math.floor(CFG.TOTAL_DURATION_MS / 40)));
-    let falarPromise = null;
+    const roulette = startTableRoulette(
+      Math.max(30, Math.floor(CONFIG.TIMING.totalDuration / 40))
+    );
 
-    atualizarDisplay("...", "");
+    updateDisplay("...", "");
 
-    const speakPromise = dramaticSpeak(["Agora...","O número é"], "pt-BR", partIndex => {
-      if(partIndex === 1){
+    let numberSpoken = false;
+
+    await dramaticSpeak(["Agora...", "O número é"], (partIndex) => {
+      if (partIndex === 1) {
         roulette.stop(finalNum);
         showOverlay(txt);
-        atualizarDisplay(txt, letra(finalNum));
-        marcarCelula(finalNum);
-        falarPromise = falarNumero(finalNum);
+        updateDisplay(txt, getLetterFromNumber(finalNum));
+        markCell(finalNum);
+        numberSpoken = true;
       }
     });
 
-    await speakPromise;
-
-    if(!falarPromise){
+    if (!numberSpoken) {
       showOverlay(txt);
-      atualizarDisplay(txt, letra(finalNum));
-      marcarCelula(finalNum);
-      falarPromise = falarNumero(finalNum);
+      updateDisplay(txt, getLetterFromNumber(finalNum));
+      markCell(finalNum);
     }
 
-    try{ await falarPromise; }catch(e){ await delay(300); }
+    try {
+      await speakNumber(finalNum);
+    } catch (e) {
+      await delay(300);
+    }
+
     roulette.stop(finalNum);
     await roulette.promise;
     hideOverlay();
-  }
+  };
 
-  function registrarRodadaAtual(){
-    if(state.sorteados.length){
+  /**
+   * Registra a rodada atual
+   */
+  const recordCurrentRound = () => {
+    if (state.sorteados.length) {
       state.rodadas.push({
         numero: state.rodadaAtual++,
         sorteados: [...state.sorteados],
         data: new Date().toLocaleString()
       });
     }
-  }
+  };
 
-  async function sortear(){
-    if(state.rodando || state.sorteados.length >= 75) return;
+  /**
+   * Sorteia um número
+   */
+  const draw = async () => {
+    if (state.rodando || state.sorteados.length >= CONFIG.TOTAL_NUMBERS) return;
 
-    if(state.autoMode){
+    if (state.autoMode) {
       clearTimeout(autoTimer);
       autoTimer = null;
     }
 
     state.rodando = true;
-    limparFala();
+    speechManager.cancel();
 
-    try{
-      let n;
-      do { n = Math.floor(Math.random()*75)+1; } while(state.sorteados.includes(n));
-      state.sorteados.push(n);
-      const txt = letra(n) + n;
-      await dramaticReveal(n, txt);
-      state.ultimoSorteado = n;
-      atualizarDisplay(txt, letra(n));
-      adicionarHistorico(txt, letra(n));
+    try {
+      const number = generateRandomNumber();
+      state.sorteados.push(number);
+      const txt = getLetterFromNumber(number) + number;
 
-      publicarEstado();
+      await dramaticReveal(number, txt);
 
-      if(state.sorteados.length >= 75){
+      state.ultimoSorteado = number;
+      updateDisplay(txt, getLetterFromNumber(number));
+      addToHistory(txt, getLetterFromNumber(number));
+
+      publishState();
+
+      if (state.sorteados.length >= CONFIG.TOTAL_NUMBERS) {
         state.autoMode = false;
         clearTimeout(autoTimer);
         autoTimer = null;
-        atualizarBotaoAuto();
-        publicarEstado();
-      }else if(state.autoMode){
-        agendarProximoAuto();
+        updateAutoButton();
+        publishState();
+      } else if (state.autoMode) {
+        scheduleNextAuto();
       }
     } finally {
       state.rodando = false;
     }
-  }
+  };
 
-  async function repetirUltimo(){
-    if(!state.ultimoSorteado) return;
-    limparFala();
-    const n = state.ultimoSorteado, txt = letra(n) + n;
+  /**
+   * Repete o último número sorteado
+   */
+  const repeatLast = async () => {
+    if (!state.ultimoSorteado) return;
+
+    speechManager.cancel();
+    const n = state.ultimoSorteado;
+    const txt = getLetterFromNumber(n) + n;
+
     showOverlay(txt);
-    try{ await falarNumero(n); }catch(e){ await delay(300); }
-    marcarCelula(n);
+    try {
+      await speakNumber(n);
+    } catch (e) {
+      await delay(300);
+    }
+    markCell(n);
     hideOverlay();
-  }
+  };
 
-  async function iniciarAuto(){
-    if(state.autoMode){
+  /**
+   * Inicia o modo automático
+   */
+  const startAutoMode = async () => {
+    if (state.autoMode) {
       state.autoMode = false;
       clearTimeout(autoTimer);
       autoTimer = null;
-      atualizarBotaoAuto();
-      publicarEstado();
+      updateAutoButton();
+      publishState();
       return;
     }
 
-    const atual = Math.max(1, Math.round(state.autoDelayMs / 1000));
-    const valor = await showDialog("Tempo entre sorteios automáticos (em segundos):", String(atual));
-    
-    if(valor === null) return;
+    const current = Math.max(1, Math.round(state.autoDelayMs / 1000));
+    const value = await showDialog(
+      "Tempo entre sorteios automáticos (em segundos):",
+      { defaultValue: String(current), min: 0.5, max: 999 }
+    );
 
-    const segundos = Number(String(valor).replace(",", "."));
-    if(!Number.isFinite(segundos) || segundos <= 0){
-      alert("Informe um valor válido.");
-      return;
-    }
+    if (value === null) return;
 
-    state.autoDelayMs = Math.round(segundos * 1000);
+    state.autoDelayMs = Math.round(value * 1000);
     state.autoMode = true;
-    atualizarBotaoAuto();
-    publicarEstado();
+    updateAutoButton();
+    publishState();
 
-    if(!state.rodando && state.sorteados.length < 75){
-      sortear();
+    if (!state.rodando && state.sorteados.length < CONFIG.TOTAL_NUMBERS) {
+      draw();
     }
-  }
+  };
 
-  async function exportarPDF(){
-    const jsPDF = window.jspdf?.jsPDF;
-    if(!jsPDF){ alert(STRINGS.JSPDF_NOT_FOUND); return; }
-
-    const doc = new jsPDF({ unit:"pt", format:"a4" });
-    const agora = new Date(), dataHora = agora.toLocaleString();
-    const W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight();
-    const M = 40, topY = 40, footerY = H - 30, maxY = footerY - 20;
-    let y = topY;
-
-    const rodadas = [...state.rodadas];
-    if(state.sorteados.length){
-      rodadas.push({ numero: state.rodadaAtual, sorteados:[...state.sorteados], data:dataHora });
+  /**
+   * Carrega jsPDF dinamicamente
+   * @returns {Promise<Function>} Construtor jsPDF
+   */
+  const loadjsPDF = async () => {
+    if (window.jspdf?.jsPDF) {
+      return window.jspdf.jsPDF;
     }
-
-    const novaPagina = () => { doc.addPage(); y = topY; };
-
-    const cabecalho = () => {
-      doc.setFont("helvetica","bold");
-      doc.setFontSize(14);
-      doc.text(STRINGS.ORG_NAME, W/2, y, { align:"center" }); y += 14;
-      doc.setFontSize(13);
-      doc.text(STRINGS.DOC_TITLE, W/2, y, { align:"center" }); y += 18;
-      doc.setFont("helvetica","normal");
-      doc.setFontSize(10);
-      doc.text(STRINGS.EMISSION_DATE + dataHora, M, y); y += 12;
-      doc.text(`Evento: ${STRINGS.EVENT_NAME}`, M, y); y += 14;
-      doc.setLineWidth(1);
-      doc.line(M, y, W - M, y); y += 16;
-      doc.text(
-        "Aos presentes, registra-se abaixo a apuração oficial dos números sorteados durante o evento, organizados por rodada, conforme acompanhamento público realizado.",
-        M, y, { maxWidth: W - (M*2) }
-      );
-      y += 30;
-    };
-
-    const cabecalhoRodada = (r, cont=false) => {
-      doc.setFont("helvetica","bold"); doc.setFontSize(12);
-      doc.text(`${STRINGS.ROUND}${r.numero}${cont ? ` ${STRINGS.CONTINUATION}` : ""}`, M, y); y += 14;
-      doc.setFont("helvetica","normal"); doc.setFontSize(10);
-      doc.text(`${STRINGS.PERFORMED_AT}${r.data}`, M, y); y += 14;
-      doc.text(`${STRINGS.TOTAL_DRAWN}${r.sorteados.length}`, M, y); y += 14;
-      doc.setFont("helvetica","bold");
-      L.forEach((l,i) => doc.text(l, X[i], y));
-      y += 12;
-    };
-
-    const desenharRodada = r => {
-      const g = { B:[], I:[], N:[], G:[], O:[] };
-      r.sorteados.forEach(n => g[letra(n)].push(n));
-      Object.keys(g).forEach(k => g[k].sort((a,b) => a-b));
-
-      if(y > maxY - 40){ novaPagina(); cabecalho(); }
-      cabecalhoRodada(r);
-
-      const maxLinhas = Math.max(...L.map(l => g[l].length), 0);
-      if(!maxLinhas){
-        doc.setFont("helvetica","normal"); doc.setFontSize(10);
-        doc.text(STRINGS.NO_NUMBERS_DRAWN, M, y);
-        y += 18;
-        return;
-      }
-
-      for(let i=0; i<maxLinhas; i++){
-        if(y > maxY - 20){
-          novaPagina(); cabecalho(); cabecalhoRodada(r, true);
+    return new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+      script.onload = () => {
+        if (window.jspdf?.jsPDF) {
+          resolve(window.jspdf.jsPDF);
+        } else {
+          reject(new Error("jsPDF não carregou corretamente"));
         }
-        doc.setFont("helvetica","normal"); doc.setFontSize(10);
-        L.forEach((l,c) => {
-          const num = g[l][i];
-          if(num !== undefined) doc.text(String(num), X[c], y);
+      };
+      script.onerror = () => reject(new Error("Erro ao carregar jsPDF"));
+      document.head.appendChild(script);
+    });
+  };
+
+  /**
+   * Exporta relatório em PDF
+   */
+  const exportPDF = async () => {
+    try {
+      const jsPDF = await loadjsPDF();
+      const doc = new jsPDF({ unit: "pt", format: "a4" });
+      const now = new Date();
+      const dateTime = now.toLocaleString();
+      const W = doc.internal.pageSize.getWidth();
+      const H = doc.internal.pageSize.getHeight();
+      const M = 40, topY = 40, footerY = H - 30, maxY = footerY - 20;
+      let y = topY;
+
+      const rounds = [...state.rodadas];
+      if (state.sorteados.length) {
+        rounds.push({
+          numero: state.rodadaAtual,
+          sorteados: [...state.sorteados],
+          data: dateTime
         });
-        y += 12;
       }
 
-      y += 10;
-      if(y < maxY){
-        doc.setLineWidth(0.5);
+      const addNewPage = () => {
+        doc.addPage();
+        y = topY;
+      };
+
+      const drawHeader = () => {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.text(STRINGS.ORG_NAME, W / 2, y, { align: "center" });
+        y += 14;
+
+        doc.setFontSize(13);
+        doc.text(STRINGS.DOC_TITLE, W / 2, y, { align: "center" });
+        y += 18;
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.text(STRINGS.EMISSION_DATE + dateTime, M, y);
+        y += 12;
+
+        doc.text(`Evento: ${STRINGS.EVENT_NAME}`, M, y);
+        y += 14;
+
+        doc.setLineWidth(1);
         doc.line(M, y, W - M, y);
         y += 16;
+
+        doc.text(
+          "Aos presentes, registra-se abaixo a apuração oficial dos números sorteados durante o evento, organizados por rodada, conforme acompanhamento público realizado.",
+          M, y, { maxWidth: W - M * 2 }
+        );
+        y += 30;
+      };
+
+      const drawRoundHeader = (r, isContinuation = false) => {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text(
+          `${STRINGS.ROUND}${r.numero}${isContinuation ? ` ${STRINGS.CONTINUATION}` : ""}`,
+          M, y
+        );
+        y += 14;
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.text(`${STRINGS.PERFORMED_AT}${r.data}`, M, y);
+        y += 14;
+
+        doc.text(`${STRINGS.TOTAL_DRAWN}${r.sorteados.length}`, M, y);
+        y += 14;
+
+        doc.setFont("helvetica", "bold");
+        LETTERS.forEach((letter, i) => doc.text(letter, X_POSITIONS[i], y));
+        y += 12;
+      };
+
+      const drawRound = (r) => {
+        const groups = { B: [], I: [], N: [], G: [], O: [] };
+        r.sorteados.forEach(n => groups[getLetterFromNumber(n)].push(n));
+        Object.values(groups).forEach(group => group.sort((a, b) => a - b));
+
+        if (y > maxY - 40) {
+          addNewPage();
+          drawHeader();
+        }
+        drawRoundHeader(r);
+
+        const maxLines = Math.max(...LETTERS.map(l => groups[l].length), 0);
+        if (!maxLines) {
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(10);
+          doc.text(STRINGS.NO_NUMBERS_DRAWN, M, y);
+          y += 18;
+          return;
+        }
+
+        for (let i = 0; i < maxLines; i++) {
+          if (y > maxY - 20) {
+            addNewPage();
+            drawHeader();
+            drawRoundHeader(r, true);
+          }
+
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(10);
+          LETTERS.forEach((letter, col) => {
+            const num = groups[letter][i];
+            if (num !== undefined) doc.text(String(num), X_POSITIONS[col], y);
+          });
+          y += 12;
+        }
+
+        y += 10;
+        if (y < maxY) {
+          doc.setLineWidth(0.5);
+          doc.line(M, y, W - M, y);
+          y += 16;
+        }
+      };
+
+      drawHeader();
+      if (!rounds.length) {
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(11);
+        doc.text(STRINGS.NO_ROUNDS_RECORDED, M, y);
+        y += 20;
+      } else {
+        rounds.forEach(drawRound);
       }
-    };
 
-    cabecalho();
-    if(!rodadas.length){
-      doc.setFont("helvetica","normal"); doc.setFontSize(11);
-      doc.text(STRINGS.NO_ROUNDS_RECORDED, M, y);
-      y += 20;
-    } else {
-      rodadas.forEach(desenharRodada);
+      if (y > maxY - 70) addNewPage();
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.line(80, y + 10, 250, y + 10);
+      doc.line(300, y + 10, 470, y + 10);
+      doc.text(STRINGS.RESPONSIBLE, 112, y + 24);
+      doc.text(STRINGS.SCHOOL_DIRECTION, 342, y + 24);
+
+      const totalPages = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.line(M, footerY - 6, W - M, footerY - 6);
+        doc.text(STRINGS.AUTO_GENERATED, M, footerY + 2);
+        doc.text(`${STRINGS.PAGE}${i}${STRINGS.OF}${totalPages}`, W - M - 70, footerY + 2);
+      }
+
+      const filename = `ata_bingo_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}.pdf`;
+      doc.save(filename);
+    } catch (e) {
+      console.error("Erro ao exportar PDF:", e);
+      alert(STRINGS.JSPDF_NOT_FOUND);
     }
+  };
 
-    if(y > maxY - 70) novaPagina();
-    doc.setFont("helvetica","normal"); doc.setFontSize(10);
-    doc.line(80, y + 10, 250, y + 10);
-    doc.line(300, y + 10, 470, y + 10);
-    doc.text(STRINGS.RESPONSIBLE, 112, y + 24);
-    doc.text(STRINGS.SCHOOL_DIRECTION, 342, y + 24);
-
-    const total = doc.internal.getNumberOfPages();
-    for(let i=1; i<=total; i++){
-      doc.setPage(i);
-      doc.setFont("helvetica","normal"); doc.setFontSize(8);
-      doc.line(M, footerY - 6, W - M, footerY - 6);
-      doc.text(STRINGS.AUTO_GENERATED, M, footerY + 2);
-      doc.text(`${STRINGS.PAGE}${i}${STRINGS.OF}${total}`, W - M - 70, footerY + 2);
-    }
-
-    const filename = `ata_bingo_${agora.getFullYear()}${String(agora.getMonth()+1).padStart(2,"0")}${String(agora.getDate()).padStart(2,"0")}.pdf`;
-    doc.save(filename);
-  }
-
-  btnSortear.addEventListener("click", sortear);
-  btnRepetir.addEventListener("click", repetirUltimo);
-  btnModo.addEventListener("click", () => { state.modo = state.modo === "pc" ? "tv" : "pc"; gerarTabela(); publicarEstado(); });
-  btnAuto.addEventListener("click", iniciarAuto);
-  btnNovo.addEventListener("click", () => {
-    if(state.rodando) return;
-    registrarRodadaAtual();
-    state.sorteados = [];
-    gerarTabela();
-    atualizarDisplay("--", "");
-    publicarEstado();
+  // ========== EVENT LISTENERS ==========
+  btnSortear.addEventListener("click", draw);
+  btnRepetir.addEventListener("click", repeatLast);
+  btnModo.addEventListener("click", () => {
+    state.modo = state.modo === "pc" ? "tv" : "pc";
+    generateTable();
+    publishState();
   });
-  btnPDF.addEventListener("click", exportarPDF);
+  btnAuto.addEventListener("click", startAutoMode);
+  btnNovo.addEventListener("click", () => {
+    if (state.rodando) return;
+    recordCurrentRound();
+    state.sorteados = [];
+    generateTable();
+    updateDisplay("--", "");
+    publishState();
+  });
+  btnPDF.addEventListener("click", exportPDF);
 
-  gerarTabela();
-  atualizarDisplay("--", "");
+  // ========== INITIALIZATION ==========
+  generateTable();
+  updateDisplay("--", "");
 });
 </script>
 </body>
