@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Bingo</title>
+<meta name="description" content="Sorteador de bingo com roleta visual, voz e exportação de relatório.">
+<meta name="theme-color" content="#000000">
+
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+  :root{
+    --bg:#000;
+    --panel:#111;
+    --cell-border:#666;
+    --overlay-bg:rgba(0,0,0,0.88);
+    --text:#fff;
+    --muted:#999;
+  }
+
+  body{
+    margin:0;
+    font-family:Arial, Helvetica, sans-serif;
+    background:var(--bg);
+    color:var(--text);
+  }
+
+  .topo{
+    text-align:center;
+    padding:10px;
+    background:var(--panel);
+  }
+
+  button{
+    padding:10px 18px;
+    margin:5px;
+    border-radius:8px;
+    border:1px solid #fff;
+    cursor:pointer;
+    font-weight:bold;
+    background:#fff;
+    color:#000;
+  }
+
+  button.active{
+    background:#000;
+    color:#fff;
+    border-color:#fff;
+  }
+
+  button:hover{
+    background:#eaeaea;
+  }
+
+  .display{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    height:30vh;
+    font-weight:bold;
+    font-size:clamp(60px, 12vw, 160px);
+    color:#fff;
+  }
+
+  .historico{
+    text-align:center;
+    padding:10px;
+  }
+
+  .item{
+    display:inline-block;
+    margin:4px;
+    font-size:22px;
+    color:#fff;
+  }
+
+  table{
+    margin:10px auto;
+    border-collapse:collapse;
+    max-width:95%;
+    overflow:auto;
+  }
+
+  td, th{
+    border:2px solid var(--cell-border);
+    padding:8px;
+    text-align:center;
+    font-weight:bold;
+    min-width:44px;
+    height:44px;
+    color:#fff !important;
+    background:rgba(255,255,255,0.04);
+    transition:background .12s ease, transform .12s ease, box-shadow .12s ease;
+  }
+
+  td.letra{
+    background:#111;
+    color:#fff;
+    width:48px;
+  }
+
+  td.destacado{
+    background:#fff;
+    color:#000 !important;
+    box-shadow:0 0 12px rgba(255,255,255,0.5);
+  }
+
+  td.roulette{
+    background:#d9d9d9;
+    color:#000 !important;
+    transform:scale(1.08);
+    box-shadow:0 0 18px rgba(255,255,255,0.85);
+  }
+
+  #overlay{
+    position:fixed;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:160px;
+    background:var(--overlay-bg);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .12s ease, transform .12s ease;
+    color:#fff;
+    text-shadow:0 6px 24px rgba(0,0,0,0.8);
+    z-index:9999;
+    transform:scale(.98);
+  }
+
+  #overlay.show{
+    opacity:1;
+    pointer-events:auto;
+    transform:scale(1);
+  }
+
+  .dialog-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.7);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:10000;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.2s ease;
+  }
+
+  .dialog-overlay.show{
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  .dialog{
+    background:#222;
+    border:2px solid #fff;
+    border-radius:12px;
+    padding:24px;
+    max-width:400px;
+    width:90%;
+    box-shadow:0 8px 32px rgba(0,0,0,0.5);
+  }
+
+  .dialog h3{
+    margin:0 0 16px 0;
+    font-size:18px;
+    color:#fff;
+  }
+
+  .dialog input{
+    width:100%;
+    padding:10px;
+    margin:12px 0;
+    border:1px solid #666;
+    border-radius:6px;
+    background:#111;
+    color:#fff;
+    font-size:16px;
+    box-sizing:border-box;
+  }
+
+  .dialog input:focus{
+    outline:none;
+    border-color:#fff;
+    box-shadow:0 0 8px rgba(255,255,255,0.3);
+  }
+
+  .dialog-buttons{
+    display:flex;
+    gap:12px;
+    margin-top:20px;
+    justify-content:flex-end;
+  }
+
+  .dialog-buttons button{
+    padding:10px 16px;
+    margin:0;
+    flex:1;
+    max-width:120px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    * { animation:none !important; transition:none !important; }
+  }
+
+  @media (max-width:900px){
+    table td, table th{
+      padding:6px;
+      min-width:36px;
+      height:36px;
+    }
+
+    .display{
+      font-size:clamp(48px, 18vw, 120px);
+      height:22vh;
+    }
+
+    #overlay{
+      font-size:96px;
+    }
+  }
+
+  @media (max-width:768px){
+    .topo{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+      padding:12px;
+    }
+
+    button{
+      padding:14px 12px;
+      margin:0;
+      font-size:14px;
+      min-height:48px;
+      width:100%;
+    }
+
+    button:hover{
+      background:#d4d4d4;
+    }
+  }
+
+  @media (max-width:600px){
+    .topo{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+      padding:10px;
+    }
+
+    button{
+      padding:16px 8px;
+      font-size:13px;
+      min-height:50px;
+      width:100%;
+      margin:0;
+    }
+
+    .display{
+      font-size:clamp(48px, 20vw, 100px);
+      height:20vh;
+    }
+
+    .item{
+      font-size:18px;
+      margin:3px;
+    }
+
+    table{
+      max-width:100%;
+      margin:8px auto;
+    }
+
+    td, th{
+      padding:5px;
+      min-width:30px;
+      height:30px;
+      font-size:12px;
+    }
+
+    td.letra{
+      width:36px;
+    }
+
+    #overlay{
+      font-size:72px;
+    }
+  }
+
+  @media (max-width:480px){
+    button{
+      padding:14px 6px;
+      font-size:12px;
+      min-height:48px;
+    }
+
+    .display{
+      height:18vh;
+    }
+
+    td, th{
+      padding:4px;
+      min-width:26px;
+      height:26px;
+      font-size:11px;
+    }
+
+    .topo{
+      gap:6px;
+      padding:8px;
+    }
+  }
+
+  /* Fix para celulares pequenos: Poco M3 Pro, Galaxy A12, iPhone SE */
+  @media (max-width:390px){
+    .topo{
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      padding: 6px;
+    }
+
+    button{
+      padding: 12px 4px;
+      font-size: 11px;
+      min-height: 44px;
+      margin: 0;
+    }
+
+    .display{
+      height: 18vh;
+      font-size: clamp(36px, 16vw, 80px);
+    }
+
+    td, th{
+      padding: 3px;
+      min-width: 24px;
+      height: 24px;
+      font-size: 10px;
+    }
+
+    td.letra{
+      width: 32px;
+    }
+
+    .item{
+      font-size: 16px;
+      margin: 2px;
+    }
+
+    .dialog{
+      max-width: 100%;
+      width: 95%;
+      padding: 16px;
+    }
+
+    .dialog h3{
+      font-size: 16px;
+      margin-bottom: 12px;
+    }
+
+    .dialog input{
+      font-size: 16px;
+      padding: 12px;
+      margin: 10px 0;
+    }
+
+    .dialog-buttons{
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .dialog-buttons button{
+      padding: 10px 12px;
+      max-width: 100%;
+      flex: 1;
+    }
+
+    #overlay{
+      font-size: 60px;
+    }
+  }
+
+  /* Extra pequeno: <= 320px (raro, mas cobre casos extremos) */
+  @media (max-width:320px){
+    button{
+      padding: 10px 2px;
+      font-size: 10px;
+      min-height: 40px;
+    }
+
+    td, th{
+      padding: 2px;
+      min-width: 20px;
+      height: 20px;
+      font-size: 9px;
+    }
+
+    .display{
+      font-size: clamp(32px, 14vw, 64px);
+      height: 16vh;
+    }
+
+    .dialog h3{
+      font-size: 14px;
+    }
+
+    #overlay{
+      font-size: 48px;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="topo">
+    <button id="btnSortear">🎲 Sortear</button>
+    <button id="btnRepetir">🔁 Repetir</button>
+    <button id="btnModo">🖥️ / 📱 Modo</button>
+    <button id="btnAuto">🎤 Auto</button>
+    <button id="btnNovo">🔄 Nova Rodada</button>
+    <button id="btnPDF">📄 PDF</button>
+  </div>
+
+  <div class="display" id="display">--</div>
+  <div class="historico" id="lista"></div>
+  <table><tbody id="numeros"></tbody></table>
+  <div id="overlay" aria-live="polite" aria-hidden="true"></div>
+
+  <div id="dialogOverlay" class="dialog-overlay">
+    <div class="dialog">
+      <h3 id="dialogTitle">Tempo entre sorteios</h3>
+      <input type="number" id="dialogInput" min="0.5" step="0.5" placeholder="Segundos" />
+      <div class="dialog-buttons">
+        <button id="dialogCancel">Cancelar</button>
+        <button id="dialogOk">OK</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const L = ["B","I","N","G","O"];
+  const X = [40, 120, 200, 280, 360];
+  const CFG = { TOTAL_DURATION_MS:2200, PAUSA_LETRA_NUM_MS:180, FALA_RATE:.8, DRAMATIC_PART_PAUSE_MS:220 };
+
+  const STRINGS = {
+    ORG_NAME: "ASSOCIAÇÃO DE PAIS E MESTRES",
+    DOC_TITLE: "ATA DE APURAÇÃO DO BINGO",
+    EVENT_NAME: "Bingo",
+    EMISSION_DATE: "Data/Hora de emissão: ",
+    NO_ROUNDS_RECORDED: "Nenhuma rodada foi registrada até o momento.",
+    NO_NUMBERS_DRAWN: "Nenhum número sorteado nesta rodada.",
+    CONTINUATION: "(continuação)",
+    ROUND: "Rodada ",
+    PERFORMED_AT: "Realizada em: ",
+    TOTAL_DRAWN: "Total de números sorteados: ",
+    RESPONSIBLE: "Responsável pela APM",
+    SCHOOL_DIRECTION: "Direção Escolar",
+    AUTO_GENERATED: "Documento oficial gerado automaticamente para conferência do sorteio.",
+    JSPDF_NOT_FOUND: "Biblioteca jsPDF não encontrada.",
+    PAGE: "Página ",
+    OF: " de "
+  };
+
+  const state = {
+    sorteados: [],
+    modo: "pc",
+    ultimoSorteado: null,
+    rodadas: [],
+    rodadaAtual: 1,
+    rodando: false,
+    autoMode: false,
+    autoDelayMs: 5000,
+    historico: []
+  };
+
+  const $ = id => document.getElementById(id);
+  const display = $("display"), lista = $("lista"), overlay = $("overlay"), tbody = $("numeros");
+  const btnSortear = $("btnSortear"), btnRepetir = $("btnRepetir"), btnModo = $("btnModo"), btnAuto = $("btnAuto"), btnNovo = $("btnNovo"), btnPDF = $("btnPDF");
+
+  // Cache de elementos para melhor performance
+  const elementCache = new Map();
+  const getElement = (id) => {
+    if (!elementCache.has(id)) {
+      elementCache.set(id, document.getElementById(id));
+    }
+    return elementCache.get(id);
+  };
+
+  const clearElementCache = () => elementCache.clear();
+
+  // Verificação de capacidades do navegador
+  const canSpeak = "speechSynthesis" in window;
+  const hasBroadcastChannel = "BroadcastChannel" in window;
+
+  const delay = ms => new Promise(r => setTimeout(r, ms));
+  const letra = n => n<=15 ? "B" : n<=30 ? "I" : n<=45 ? "N" : n<=60 ? "G" : "O";
+
+  const limparFala = () => { 
+    if(canSpeak) try{ speechSynthesis.cancel(); }catch(e){ console.warn("Erro ao limpar fala:", e); }
+  };
+
+  const atualizarDisplay = (txt, cls) => display.innerHTML = `<span class="${cls}">${txt}</span>`;
+
+  function renderHistorico(){
+    lista.innerHTML = "";
+    state.historico.forEach(item => {
+      const el = document.createElement("div");
+      el.className = "item " + item.cls;
+      el.innerText = item.txt;
+      lista.appendChild(el);
+    });
+  }
+
+  const adicionarHistorico = (txt, cls) => {
+    state.historico.unshift({ txt, cls });
+    state.historico = state.historico.slice(0, 5);
+    renderHistorico();
+  };
+
+  const showOverlay = txt => {
+    overlay.textContent = txt;
+    overlay.classList.add("show");
+    overlay.setAttribute("aria-hidden","false");
+  };
+
+  const hideOverlay = () => {
+    overlay.classList.remove("show");
+    overlay.setAttribute("aria-hidden","true");
+  };
+
+  // Dialog customizado para melhor UX
+  const showDialog = (title, defaultValue = "") => {
+    return new Promise(resolve => {
+      const dialogOverlay = $("dialogOverlay");
+      const dialogTitle = $("dialogTitle");
+      const dialogInput = $("dialogInput");
+      const dialogOk = $("dialogOk");
+      const dialogCancel = $("dialogCancel");
+
+      dialogTitle.textContent = title;
+      dialogInput.value = defaultValue;
+
+      const cleanup = () => {
+        dialogOverlay.classList.remove("show");
+        dialogOk.removeEventListener("click", handleOk);
+        dialogCancel.removeEventListener("click", handleCancel);
+        dialogInput.removeEventListener("keypress", handleKeypress);
+      };
+
+      const handleOk = () => {
+        const value = dialogInput.value.trim();
+        cleanup();
+        resolve(value || null);
+      };
+
+      const handleCancel = () => {
+        cleanup();
+        resolve(null);
+      };
+
+      const handleKeypress = (e) => {
+        if(e.key === "Enter") handleOk();
+        if(e.key === "Escape") handleCancel();
+      };
+
+      dialogOk.addEventListener("click", handleOk);
+      dialogCancel.addEventListener("click", handleCancel);
+      dialogInput.addEventListener("keypress", handleKeypress);
+
+      dialogOverlay.classList.add("show");
+      setTimeout(() => dialogInput.focus(), 100);
+    });
+  };
+
+  function marcarCelula(n){
+    const el = getElement("n"+n);
+    if(!el) return;
+    el.classList.add("destacado");
+    el.classList.remove("roulette");
+    try{
+      el.animate(
+        [
+          { transform:"scale(1.08)", boxShadow:"0 0 22px rgba(255,255,255,0.9)" },
+          { transform:"scale(1)", boxShadow:"0 0 8px rgba(255,255,255,0.35)" }
+        ],
+        { duration:700, iterations:1, easing:"ease-out" }
+      );
+    }catch(e){ console.warn("Erro na animação:", e); }
+  }
+
+  function gerarTabela(){
+    let html = "";
+    if(state.modo === "pc"){
+      for(let l=0; l<5; l++){
+        html += "<tr><td class='letra'>"+L[l]+"</td>";
+        for(let c=0; c<15; c++){
+          const num = l*15 + c + 1;
+          html += `<td id="n${num}" class="${L[l]}">${num}</td>`;
+        }
+        html += "</tr>";
+      }
+    }else{
+      html += "<tr>" + L.map(h => `<th>${h}</th>`).join("") + "</tr>";
+      for(let i=1; i<=15; i++){
+        html += "<tr>";
+        html += `<td id="n${i}" class="B">${i}</td>`;
+        html += `<td id="n${i+15}" class="I">${i+15}</td>`;
+        html += `<td id="n${i+30}" class="N">${i+30}</td>`;
+        html += `<td id="n${i+45}" class="G">${i+45}</td>`;
+        html += `<td id="n${i+60}" class="O">${i+60}</td>`;
+        html += "</tr>";
+      }
+    }
+    tbody.innerHTML = html;
+    clearElementCache(); // Limpar cache quando tabela é regenerada
+    state.sorteados.forEach(n => getElement("n"+n)?.classList.add("destacado"));
+  }
+
+  function dramaticSpeak(parts=["Agora...","O número é"], lang="pt-BR", onPartEnd=null){
+    return new Promise(resolve => {
+      if(!canSpeak) return resolve();
+      const queue = parts.slice();
+      let index = 0;
+      const next = () => {
+        if(!queue.length) return resolve();
+        const partIndex = index++;
+        const msg = new SpeechSynthesisUtterance(queue.shift());
+        msg.lang = lang;
+        msg.rate = CFG.FALA_RATE;
+        msg.onend = () => {
+          if(typeof onPartEnd === "function") try{ onPartEnd(partIndex); }catch(e){ console.warn("Erro no callback:", e); }
+          setTimeout(next, CFG.DRAMATIC_PART_PAUSE_MS);
+        };
+        try{ speechSynthesis.speak(msg); }catch(e){ console.warn("Erro ao falar:", e); setTimeout(next, CFG.DRAMATIC_PART_PAUSE_MS); }
+      };
+      next();
+    });
+  }
+
+  function falarNumero(n){
+    return new Promise(resolve => {
+      if(!canSpeak) return resolve();
+      try{
+        const m = { B:"bê", I:"i", N:"ene", G:"gê", O:"ó" };
+        const Lf = m[letra(n)] || letra(n);
+        const u1 = new SpeechSynthesisUtterance(Lf);
+        const u2 = new SpeechSynthesisUtterance(n.toLocaleString("pt-BR"));
+        u1.lang = u2.lang = "pt-BR";
+        u1.rate = u2.rate = CFG.FALA_RATE;
+        u2.onend = resolve;
+        u1.onend = () => setTimeout(() => {
+          try{ speechSynthesis.speak(u2); }catch(e){ console.warn("Erro ao falar número:", e); resolve(); }
+        }, CFG.PAUSA_LETRA_NUM_MS);
+        try{ speechSynthesis.speak(u1); }catch(e){ console.warn("Erro ao iniciar fala:", e); resolve(); }
+      }catch(e){ console.warn("Erro geral em falarNumero:", e); resolve(); }
+    });
+  }
+
+  function startTableRoulette(tickInterval=60){
+    let iv = null, prevEl = null, stopped = false, resolvePromise;
+    const promise = new Promise(r => { resolvePromise = r; });
+
+    iv = setInterval(() => {
+      if(stopped) return;
+      prevEl?.classList.remove("roulette");
+      const num = Math.floor(Math.random()*75)+1;
+      const el = getElement("n"+num);
+      if(el){ el.classList.add("roulette"); prevEl = el; }
+    }, tickInterval);
+
+    const stop = finalNum => {
+      if(stopped) return;
+      stopped = true;
+      clearInterval(iv);
+      prevEl?.classList.remove("roulette");
+      const finalEl = getElement("n"+finalNum);
+      if(finalEl){
+        finalEl.classList.add("roulette");
+        setTimeout(() => finalEl.classList.remove("roulette"), 120);
+      }
+      resolvePromise();
+    };
+
+    return { promise, stop };
+  }
+
+  function snapshotEstado(){
+    return {
+      sorteados: [...state.sorteados],
+      modo: state.modo,
+      ultimoSorteado: state.ultimoSorteado,
+      rodadas: state.rodadas.map(r => ({
+        numero: r.numero,
+        sorteados: [...r.sorteados],
+        data: r.data
+      })),
+      rodadaAtual: state.rodadaAtual,
+      historico: state.historico.map(h => ({ txt: h.txt, cls: h.cls })),
+      autoMode: state.autoMode,
+      autoDelayMs: state.autoDelayMs
+    };
+  }
+
+  function publicarEstado(){
+    if(canal) try{ canal.postMessage({ type:"state", payload: snapshotEstado() }); }catch(e){ console.warn("Erro ao publicar estado:", e); }
+  }
+
+  function atualizarBotaoAuto(){
+    btnAuto.classList.toggle("active", state.autoMode);
+    btnAuto.textContent = state.autoMode ? "⏹ Auto" : "🎤 Auto";
+  }
+
+  const canal = hasBroadcastChannel ? new BroadcastChannel("bingo_bingo_sync") : null;
+
+  if(canal){
+    canal.onmessage = ev => {
+      const data = ev.data || {};
+      if(data.type === "request-state"){
+        publicarEstado();
+        return;
+      }
+      if(data.type === "state"){
+        const payload = data.payload;
+        if(!payload) return;
+
+        state.sorteados = [...(payload.sorteados || [])];
+        state.modo = payload.modo || "pc";
+        state.ultimoSorteado = payload.ultimoSorteado ?? null;
+        state.rodadas = (payload.rodadas || []).map(r => ({
+          numero: r.numero,
+          sorteados: [...(r.sorteados || [])],
+          data: r.data
+        }));
+        state.rodadaAtual = payload.rodadaAtual || 1;
+        state.historico = (payload.historico || []).map(h => ({ txt: h.txt, cls: h.cls }));
+        if(typeof payload.autoMode === "boolean") state.autoMode = payload.autoMode;
+        if(typeof payload.autoDelayMs === "number") state.autoDelayMs = payload.autoDelayMs;
+
+        gerarTabela();
+        renderHistorico();
+        atualizarBotaoAuto();
+        atualizarDisplay(state.ultimoSorteado ? (letra(state.ultimoSorteado) + state.ultimoSorteado) : "--", state.ultimoSorteado ? letra(state.ultimoSorteado) : "");
+      }
+    };
+  }
+
+  let autoTimer = null;
+
+  function agendarProximoAuto(){
+    clearTimeout(autoTimer);
+    if(!state.autoMode || state.sorteados.length >= 75) return;
+    autoTimer = setTimeout(() => {
+      sortear();
+    }, state.autoDelayMs);
+  }
+
+  async function dramaticReveal(finalNum, txt){
+    hideOverlay();
+    const roulette = startTableRoulette(Math.max(30, Math.floor(CFG.TOTAL_DURATION_MS / 40)));
+    let falarPromise = null;
+
+    atualizarDisplay("...", "");
+
+    const speakPromise = dramaticSpeak(["Agora...","O número é"], "pt-BR", partIndex => {
+      if(partIndex === 1){
+        roulette.stop(finalNum);
+        showOverlay(txt);
+        atualizarDisplay(txt, letra(finalNum));
+        marcarCelula(finalNum);
+        falarPromise = falarNumero(finalNum);
+      }
+    });
+
+    await speakPromise;
+
+    if(!falarPromise){
+      showOverlay(txt);
+      atualizarDisplay(txt, letra(finalNum));
+      marcarCelula(finalNum);
+      falarPromise = falarNumero(finalNum);
+    }
+
+    try{ await falarPromise; }catch(e){ await delay(300); }
+    roulette.stop(finalNum);
+    await roulette.promise;
+    hideOverlay();
+  }
+
+  function registrarRodadaAtual(){
+    if(state.sorteados.length){
+      state.rodadas.push({
+        numero: state.rodadaAtual++,
+        sorteados: [...state.sorteados],
+        data: new Date().toLocaleString()
+      });
+    }
+  }
+
+  async function sortear(){
+    if(state.rodando || state.sorteados.length >= 75) return;
+
+    if(state.autoMode){
+      clearTimeout(autoTimer);
+      autoTimer = null;
+    }
+
+    state.rodando = true;
+    limparFala();
+
+    try{
+      let n;
+      do { n = Math.floor(Math.random()*75)+1; } while(state.sorteados.includes(n));
+      state.sorteados.push(n);
+      const txt = letra(n) + n;
+      await dramaticReveal(n, txt);
+      state.ultimoSorteado = n;
+      atualizarDisplay(txt, letra(n));
+      adicionarHistorico(txt, letra(n));
+
+      publicarEstado();
+
+      if(state.sorteados.length >= 75){
+        state.autoMode = false;
+        clearTimeout(autoTimer);
+        autoTimer = null;
+        atualizarBotaoAuto();
+        publicarEstado();
+      }else if(state.autoMode){
+        agendarProximoAuto();
+      }
+    } finally {
+      state.rodando = false;
+    }
+  }
+
+  async function repetirUltimo(){
+    if(!state.ultimoSorteado) return;
+    limparFala();
+    const n = state.ultimoSorteado, txt = letra(n) + n;
+    showOverlay(txt);
+    try{ await falarNumero(n); }catch(e){ await delay(300); }
+    marcarCelula(n);
+    hideOverlay();
+  }
+
+  async function iniciarAuto(){
+    if(state.autoMode){
+      state.autoMode = false;
+      clearTimeout(autoTimer);
+      autoTimer = null;
+      atualizarBotaoAuto();
+      publicarEstado();
+      return;
+    }
+
+    const atual = Math.max(1, Math.round(state.autoDelayMs / 1000));
+    const valor = await showDialog("Tempo entre sorteios automáticos (em segundos):", String(atual));
+    
+    if(valor === null) return;
+
+    const segundos = Number(String(valor).replace(",", "."));
+    if(!Number.isFinite(segundos) || segundos <= 0){
+      alert("Informe um valor válido.");
+      return;
+    }
+
+    state.autoDelayMs = Math.round(segundos * 1000);
+    state.autoMode = true;
+    atualizarBotaoAuto();
+    publicarEstado();
+
+    if(!state.rodando && state.sorteados.length < 75){
+      sortear();
+    }
+  }
+
+  async function exportarPDF(){
+    const jsPDF = window.jspdf?.jsPDF;
+    if(!jsPDF){ alert(STRINGS.JSPDF_NOT_FOUND); return; }
+
+    const doc = new jsPDF({ unit:"pt", format:"a4" });
+    const agora = new Date(), dataHora = agora.toLocaleString();
+    const W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight();
+    const M = 40, topY = 40, footerY = H - 30, maxY = footerY - 20;
+    let y = topY;
+
+    const rodadas = [...state.rodadas];
+    if(state.sorteados.length){
+      rodadas.push({ numero: state.rodadaAtual, sorteados:[...state.sorteados], data:dataHora });
+    }
+
+    const novaPagina = () => { doc.addPage(); y = topY; };
+
+    const cabecalho = () => {
+      doc.setFont("helvetica","bold");
+      doc.setFontSize(14);
+      doc.text(STRINGS.ORG_NAME, W/2, y, { align:"center" }); y += 14;
+      doc.setFontSize(13);
+      doc.text(STRINGS.DOC_TITLE, W/2, y, { align:"center" }); y += 18;
+      doc.setFont("helvetica","normal");
+      doc.setFontSize(10);
+      doc.text(STRINGS.EMISSION_DATE + dataHora, M, y); y += 12;
+      doc.text(`Evento: ${STRINGS.EVENT_NAME}`, M, y); y += 14;
+      doc.setLineWidth(1);
+      doc.line(M, y, W - M, y); y += 16;
+      doc.text(
+        "Aos presentes, registra-se abaixo a apuração oficial dos números sorteados durante o evento, organizados por rodada, conforme acompanhamento público realizado.",
+        M, y, { maxWidth: W - (M*2) }
+      );
+      y += 30;
+    };
+
+    const cabecalhoRodada = (r, cont=false) => {
+      doc.setFont("helvetica","bold"); doc.setFontSize(12);
+      doc.text(`${STRINGS.ROUND}${r.numero}${cont ? ` ${STRINGS.CONTINUATION}` : ""}`, M, y); y += 14;
+      doc.setFont("helvetica","normal"); doc.setFontSize(10);
+      doc.text(`${STRINGS.PERFORMED_AT}${r.data}`, M, y); y += 14;
+      doc.text(`${STRINGS.TOTAL_DRAWN}${r.sorteados.length}`, M, y); y += 14;
+      doc.setFont("helvetica","bold");
+      L.forEach((l,i) => doc.text(l, X[i], y));
+      y += 12;
+    };
+
+    const desenharRodada = r => {
+      const g = { B:[], I:[], N:[], G:[], O:[] };
+      r.sorteados.forEach(n => g[letra(n)].push(n));
+      Object.keys(g).forEach(k => g[k].sort((a,b) => a-b));
+
+      if(y > maxY - 40){ novaPagina(); cabecalho(); }
+      cabecalhoRodada(r);
+
+      const maxLinhas = Math.max(...L.map(l => g[l].length), 0);
+      if(!maxLinhas){
+        doc.setFont("helvetica","normal"); doc.setFontSize(10);
+        doc.text(STRINGS.NO_NUMBERS_DRAWN, M, y);
+        y += 18;
+        return;
+      }
+
+      for(let i=0; i<maxLinhas; i++){
+        if(y > maxY - 20){
+          novaPagina(); cabecalho(); cabecalhoRodada(r, true);
+        }
+        doc.setFont("helvetica","normal"); doc.setFontSize(10);
+        L.forEach((l,c) => {
+          const num = g[l][i];
+          if(num !== undefined) doc.text(String(num), X[c], y);
+        });
+        y += 12;
+      }
+
+      y += 10;
+      if(y < maxY){
+        doc.setLineWidth(0.5);
+        doc.line(M, y, W - M, y);
+        y += 16;
+      }
+    };
+
+    cabecalho();
+    if(!rodadas.length){
+      doc.setFont("helvetica","normal"); doc.setFontSize(11);
+      doc.text(STRINGS.NO_ROUNDS_RECORDED, M, y);
+      y += 20;
+    } else {
+      rodadas.forEach(desenharRodada);
+    }
+
+    if(y > maxY - 70) novaPagina();
+    doc.setFont("helvetica","normal"); doc.setFontSize(10);
+    doc.line(80, y + 10, 250, y + 10);
+    doc.line(300, y + 10, 470, y + 10);
+    doc.text(STRINGS.RESPONSIBLE, 112, y + 24);
+    doc.text(STRINGS.SCHOOL_DIRECTION, 342, y + 24);
+
+    const total = doc.internal.getNumberOfPages();
+    for(let i=1; i<=total; i++){
+      doc.setPage(i);
+      doc.setFont("helvetica","normal"); doc.setFontSize(8);
+      doc.line(M, footerY - 6, W - M, footerY - 6);
+      doc.text(STRINGS.AUTO_GENERATED, M, footerY + 2);
+      doc.text(`${STRINGS.PAGE}${i}${STRINGS.OF}${total}`, W - M - 70, footerY + 2);
+    }
+
+    const filename = `ata_bingo_${agora.getFullYear()}${String(agora.getMonth()+1).padStart(2,"0")}${String(agora.getDate()).padStart(2,"0")}.pdf`;
+    doc.save(filename);
+  }
+
+  btnSortear.addEventListener("click", sortear);
+  btnRepetir.addEventListener("click", repetirUltimo);
+  btnModo.addEventListener("click", () => { state.modo = state.modo === "pc" ? "tv" : "pc"; gerarTabela(); publicarEstado(); });
+  btnAuto.addEventListener("click", iniciarAuto);
+  btnNovo.addEventListener("click", () => {
+    if(state.rodando) return;
+    registrarRodadaAtual();
+    state.sorteados = [];
+    state.ultimoSorteado = null;
+    state.historico = [];
+    state.autoMode = false;
+    clearTimeout(autoTimer);
+    autoTimer = null;
+    lista.innerHTML = "";
+    display.innerText = "--";
+    atualizarBotaoAuto();
+    gerarTabela();
+    publicarEstado();
+  });
+  btnPDF.addEventListener("click", exportarPDF);
+
+  gerarTabela();
+  atualizarBotaoAuto();
+
+  if(canal){
+    setTimeout(() => {
+      try{ canal.postMessage({ type:"request-state" }); }catch(e){ console.warn("Erro ao solicitar estado:", e); }
+    }, 250);
+  }
+
+  window._bingo = { sortear, repetirUltimo, gerarTabela, exportarPDF, CFG, state };
+});
+</script>
+</body>
+</html>
