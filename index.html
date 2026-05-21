@@ -1157,8 +1157,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const txt = letter + number;
 
       addToHistory(txt, letter);
-      updateCounter(); // MELHORIA 2: Atualizar contador
+      // CORREÇÃO: Mover updateCounter() para APÓS dramaticReveal()
       await dramaticReveal(number, txt);
+      updateCounter(); // Agora atualiza APÓS animação
       publishState();
       // MELHORIA 4: Salvar estado
       StorageManager.save("state", snapshotState());
