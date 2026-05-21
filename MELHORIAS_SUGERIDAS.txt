@@ -1,0 +1,123 @@
+SUGESTÕES DE MELHORIAS SEGURAS PARA O BINGO
+
+=== 1. PERFORMANCE (Sem Impacto no Sorteio) ===
+
+✅ Usar Set em vez de Array para `sorteados`
+   - Problema atual: generateRandomNumber() faz O(n) checks
+   - Solução: usar Set para O(1)
+   - Impacto: ZERO no funcionamento visual/de sorteio
+   
+   CODE:
+   // ANTES
+   const state = {
+     sorteados: []
+   };
+   while (state.sorteados.includes(number)); // O(n)
+   
+   // DEPOIS
+   const state = {
+     sorteados: new Set()
+   };
+   while (state.sorteados.has(number)); // O(1)
+
+---
+
+=== 2. ACESSIBILIDADE (Keyboard Only) ===
+
+✅ Adicionar keyboard shortcuts visuais
+   - F = Força o foco no primeiro botão
+   - Escape = Parar sorteio
+   - Números (1-6) = Atalhos para botões
+   - Impacto: ZERO funcional, puramente adicional
+
+✅ Focus outline apenas no CSS (sem mudar HTML)
+   - `button:focus-visible { outline: 2px solid #4da6ff; }`
+   - Não interfere na animação
+   
+---
+
+=== 3. ROBUSTEZ (Silencioso) ===
+
+✅ Try-catch na função draw() e repeat()
+   - Protege contra erros inesperados
+   - Não muda o fluxo visual
+   
+✅ Validação de jsPDF antes de usar
+   - Fallback para JSON export
+   - Usuário recebe mensagem clara
+   
+✅ Proteção contra cliques múltiplos
+   - Flag `state.rodando` (JÁ EXISTE!)
+   - Apenas melhorar: desabilitar btnSortear durante execução
+   
+---
+
+=== 4. CÓDIGO LIMPO (Organização) ===
+
+✅ Separar funções grandes em menores:
+   - generatePDF() é muito longa (90+ linhas)
+   - Dividir em: createPDFHeader(), addRoundsToPage(), etc
+   
+✅ Remover variável não usada:
+   - X_POSITIONS (linha 499) não é usada
+   
+✅ Strings constantes para valores mágicos:
+   - setTimeout(..., 120) → CONFIG.ROULETTE_STOP_DELAY
+   - setTimeout(..., 100) → CONFIG.DIALOG_FOCUS_DELAY
+
+---
+
+=== 5. DADOS PERSISTENTES (LocalStorage) ===
+
+✅ Salvar rodadas em localStorage
+   - Sem HTML changes
+   - Recupera ao recarregar página
+   - Impacto: ZERO no funcionamento
+   
+   CODE:
+   const saveState = () => {
+     localStorage.setItem('bingo_state', JSON.stringify(snapshotState()));
+   };
+   
+   const loadState = () => {
+     const saved = localStorage.getItem('bingo_state');
+     if (saved) { /* restaurar */ }
+   };
+
+---
+
+=== 6. VALIDAÇÃO DE ENTRADA ===
+
+✅ Melhorar validação do diálogo
+   - Min: 0.5s já protege
+   - Max: 999s já protege
+   - Adicionar: avisar se < 1s (vai ficar rápido)
+
+✅ Validar estado antes de draw()
+   - if (state.rodando) return; (JÁ FAZE ISSO!)
+   - if (state.sorteados.length >= 75) { parar auto }
+
+---
+
+=== 7. QUALIDADE DE VIDA ===
+
+✅ Tecla Space = Sortear (quando não em input)
+   - Muito comum em aplicações de sorteio
+   
+✅ Mostrar contador: "X de 75 números sorteados"
+   - Apenas adicionar ao HTML (1 div)
+   - Atualizar no updateDisplay()
+   
+✅ Histórico scroll horizontal em mobile
+   - `.historico { overflow-x: auto; }` (CSS only)
+
+---
+
+RECOMENDAÇÃO DE PRIORIDADE:
+1º: Set para sorteados (máximo ganho, mínimo risco)
+2º: Try-catch em operações críticas
+3º: Focus-visible no CSS
+4º: LocalStorage para persistência
+5º: Contador visual "X de 75"
+
+Qual você prefere implementar primeiro? 🚀
