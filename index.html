@@ -1151,17 +1151,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const number = generateRandomNumber();
-      state.sorteados.add(number); // Set.add()
-      state.ultimoSorteado = number;
       const letter = getLetterFromNumber(number);
       const txt = letter + number;
 
-      addToHistory(txt, letter);
-      // CORREÇÃO: Mover updateCounter() para APÓS dramaticReveal()
       await dramaticReveal(number, txt);
-      updateCounter(); // Agora atualiza APÓS animação
+
+      state.sorteados.add(number);
+      state.ultimoSorteado = number;
+      addToHistory(txt, letter);
+
+      updateCounter();
       publishState();
-      // MELHORIA 4: Salvar estado
       StorageManager.save("state", snapshotState());
       scheduleNextAuto();
     } catch (e) {
