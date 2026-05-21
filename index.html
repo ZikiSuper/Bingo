@@ -18,6 +18,7 @@
     --overlay-bg:rgba(0,0,0,0.88);
     --text:#fff;
     --muted:#999;
+    --focus-color:#4da6ff;
     --cell-padding: 8px;
     --cell-min-width: 44px;
     --cell-height: 44px;
@@ -47,7 +48,12 @@
     font-weight:bold;
     background:#fff;
     color:#000;
-    transition: background 0.2s ease, color 0.2s ease;
+    transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  button:focus-visible{
+    outline:none;
+    box-shadow: 0 0 0 3px var(--focus-color), inset 0 0 0 2px #000;
   }
 
   button.active{
@@ -207,6 +213,13 @@
     margin:0;
     flex:1;
     max-width:120px;
+  }
+
+  .error-message{
+    color:#ff6b6b;
+    padding:10px;
+    text-align:center;
+    margin:5px 0;
   }
 
   @media (prefers-reduced-motion: reduce){
@@ -394,37 +407,40 @@
 </head>
 <body>
   <div class="topo">
-    <button id="btnSortear" aria-label="Sortear um novo número">🎲 Sortear</button>
-    <button id="btnRepetir" aria-label="Repetir o último número sorteado">🔁 Repetir</button>
-    <button id="btnModo" aria-label="Alternar entre modo desktop e mobile">🖥️ / 📱 Modo</button>
-    <button id="btnAuto" aria-label="Ativar modo de sorteio automático">🎤 Auto</button>
-    <button id="btnNovo" aria-label="Iniciar uma nova rodada de sorteios">🔄 Nova Rodada</button>
-    <button id="btnPDF" aria-label="Exportar relatório em PDF">📄 PDF</button>
+    <button id="btnSortear" tabindex="0" aria-label="Sortear um novo número">🎲 Sortear</button>
+    <button id="btnRepetir" tabindex="0" aria-label="Repetir o último número sorteado">🔁 Repetir</button>
+    <button id="btnModo" tabindex="0" aria-label="Alternar entre modo desktop e mobile">🖥️ / 📱 Modo</button>
+    <button id="btnAuto" tabindex="0" aria-label="Ativar modo de sorteio automático">🎤 Auto</button>
+    <button id="btnCancelarFala" tabindex="0" aria-label="Parar síntese de fala" style="display:none;">🔇 Parar</button>
+    <button id="btnNovo" tabindex="0" aria-label="Iniciar uma nova rodada de sorteios">🔄 Nova Rodada</button>
+    <button id="btnPDF" tabindex="0" aria-label="Exportar relatório em PDF">📄 PDF</button>
   </div>
 
-  <div class="display" id="display" role="status" aria-live="polite">--</div>
+  <div id="errorContainer"></div>
+  <div class="display" id="display" role="status" aria-live="polite" aria-atomic="true">--</div>
   <div class="historico" id="lista" role="region" aria-label="Histórico de números sorteados"></div>
   <table role="grid" aria-label="Tabela de números do bingo"><tbody id="numeros"></tbody></table>
   <div id="overlay" aria-live="assertive" aria-hidden="true" role="status"></div>
 
-  <div id="dialogOverlay" class="dialog-overlay" role="dialog" aria-modal="true">
+  <div id="dialogOverlay" class="dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
     <div class="dialog">
       <h3 id="dialogTitle">Tempo entre sorteios</h3>
       <input type="number" id="dialogInput" min="0.5" step="0.5" placeholder="Segundos" aria-label="Tempo em segundos" />
       <div class="dialog-buttons">
-        <button id="dialogCancel" aria-label="Cancelar diálogo">Cancelar</button>
-        <button id="dialogOk" aria-label="Confirmar entrada">OK</button>
+        <button id="dialogCancel" tabindex="0" aria-label="Cancelar diálogo">Cancelar</button>
+        <button id="dialogOk" tabindex="0" aria-label="Confirmar entrada">OK</button>
       </div>
     </div>
   </div>
 
 <script>
 /**
- * Sistema de gerenciamento de síntese de fala
+ * Sistema de gerenciamento de síntese de fala com cancelamento
  */
 class SpeechManager {
   constructor() {
     this.isSupported = "speechSynthesis" in window;
+    this.isSpeaking = false;
   }
 
   /**
@@ -442,14 +458,22 @@ class SpeechManager {
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = lang;
         utterance.rate = rate;
-        utterance.onend = resolve;
-        utterance.onerror = () => {
-          console.warn("Erro ao falar:", text);
+        utterance.onstart = () => {
+          this.isSpeaking = true;
+        };
+        utterance.onend = () => {
+          this.isSpeaking = false;
+          resolve();
+        };
+        utterance.onerror = (e) => {
+          console.warn("Erro ao falar:", text, e);
+          this.isSpeaking = false;
           resolve();
         };
         speechSynthesis.speak(utterance);
       } catch (e) {
         console.warn("Erro ao iniciar fala:", e);
+        this.isSpeaking = false;
         resolve();
       }
     });
@@ -462,10 +486,18 @@ class SpeechManager {
     if (this.isSupported) {
       try {
         speechSynthesis.cancel();
+        this.isSpeaking = false;
       } catch (e) {
         console.warn("Erro ao cancelar fala:", e);
       }
     }
+  }
+
+  /**
+   * Retorna se está falando
+   */
+  getIsSpeaking() {
+    return this.isSpeaking;
   }
 }
 
@@ -528,10 +560,13 @@ document.addEventListener("DOMContentLoaded", () => {
     RESPONSIBLE: "Responsável pela APM",
     SCHOOL_DIRECTION: "Direção Escolar",
     AUTO_GENERATED: "Documento oficial gerado automaticamente para conferência do sorteio.",
-    JSPDF_NOT_FOUND: "Biblioteca jsPDF não encontrada.",
+    JSPDF_NOT_FOUND: "Biblioteca jsPDF não encontrada. Tente novamente em alguns segundos.",
     PAGE: "Página ",
     OF: " de ",
-    INVALID_TIME: "Informe um valor válido (maior que 0)."
+    INVALID_TIME: "Informe um valor válido (maior que 0).",
+    CONFIRM_NEW_ROUND: "Tem certeza que deseja iniciar uma nova rodada? Os números sorteados serão perdidos.",
+    ERROR_GENERATING_PDF: "Erro ao gerar PDF. Por favor, tente novamente.",
+    DRAW_IN_PROGRESS: "Um sorteio está em andamento. Aguarde..."
   };
 
   // ========== STATE ==========
@@ -557,10 +592,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const lista = $("lista");
   const overlay = $("overlay");
   const tbody = $("numeros");
+  const errorContainer = $("errorContainer");
   const btnSortear = $("btnSortear");
   const btnRepetir = $("btnRepetir");
   const btnModo = $("btnModo");
   const btnAuto = $("btnAuto");
+  const btnCancelarFala = $("btnCancelarFala");
   const btnNovo = $("btnNovo");
   const btnPDF = $("btnPDF");
 
@@ -570,6 +607,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ========== UTILITIES ==========
   const delay = ms => new Promise(r => setTimeout(r, ms));
+
+  /**
+   * Mostra mensagem de erro ao usuário
+   * @param {string} msg - Mensagem de erro
+   */
+  const showError = (msg) => {
+    if (!errorContainer) return;
+    const msgEl = document.createElement("div");
+    msgEl.className = "error-message";
+    msgEl.textContent = msg;
+    msgEl.setAttribute("role", "alert");
+    msgEl.setAttribute("aria-live", "polite");
+    errorContainer.appendChild(msgEl);
+    setTimeout(() => msgEl.remove(), 5000);
+    console.error("ERRO:", msg);
+  };
+
+  /**
+   * Atualiza visibilidade do botão de cancelar fala
+   */
+  const updateSpeechButton = () => {
+    if (!btnCancelarFala) return;
+    const isSpeaking = speechManager.getIsSpeaking();
+    btnCancelarFala.style.display = isSpeaking ? "inline-block" : "none";
+  };
 
   /**
    * Retorna a letra (B, I, N, G, O) correspondente ao número
@@ -602,6 +664,7 @@ document.addEventListener("DOMContentLoaded", () => {
    * @param {string} cls - Classe CSS (letra)
    */
   const updateDisplay = (txt, cls) => {
+    if (!display) return;
     display.innerHTML = `<span class="${cls}">${txt}</span>`;
   };
 
@@ -609,6 +672,7 @@ document.addEventListener("DOMContentLoaded", () => {
    * Renderiza o histórico de números sorteados
    */
   const renderHistory = () => {
+    if (!lista) return;
     lista.innerHTML = "";
     state.historico.forEach(item => {
       const el = document.createElement("div");
@@ -634,6 +698,7 @@ document.addEventListener("DOMContentLoaded", () => {
    * @param {string} txt - Número para exibir
    */
   const showOverlay = txt => {
+    if (!overlay) return;
     overlay.textContent = txt;
     overlay.classList.add("show");
     overlay.setAttribute("aria-hidden", "false");
@@ -643,6 +708,7 @@ document.addEventListener("DOMContentLoaded", () => {
    * Esconde o overlay
    */
   const hideOverlay = () => {
+    if (!overlay) return;
     overlay.classList.remove("show");
     overlay.setAttribute("aria-hidden", "true");
   };
@@ -663,6 +729,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const dialogOk = $("dialogOk");
       const dialogCancel = $("dialogCancel");
 
+      if (!dialogOverlay || !dialogTitle || !dialogInput || !dialogOk || !dialogCancel) {
+        console.error("Elementos do diálogo não encontrados");
+        resolve(null);
+        return;
+      }
+
       dialogTitle.textContent = title;
       dialogInput.value = defaultValue;
       dialogInput.min = min;
@@ -679,7 +751,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const handleOk = () => {
         const value = parseFloat(dialogInput.value);
         if (isNaN(value) || value < min || value > max) {
-          alert(`${STRINGS.INVALID_TIME} (mín: ${min}, máx: ${max})`);
+          showError(`${STRINGS.INVALID_TIME} (mín: ${min}, máx: ${max})`);
           return;
         }
         cleanup();
@@ -733,36 +805,43 @@ document.addEventListener("DOMContentLoaded", () => {
    * Gera a tabela de bingo
    */
   const generateTable = () => {
+    if (!tbody) return;
+    
     let html = "";
 
-    if (state.modo === "pc") {
-      for (let l = 0; l < CONFIG.ROWS; l++) {
-        html += "<tr><td class='letra'>" + LETTERS[l] + "</td>";
-        for (let c = 0; c < CONFIG.COLS; c++) {
-          const num = l * CONFIG.COLS + c + 1;
-          html += `<td id="n${num}" class="${LETTERS[l]}">${num}</td>`;
+    try {
+      if (state.modo === "pc") {
+        for (let l = 0; l < CONFIG.ROWS; l++) {
+          html += "<tr><td class='letra'>" + LETTERS[l] + "</td>";
+          for (let c = 0; c < CONFIG.COLS; c++) {
+            const num = l * CONFIG.COLS + c + 1;
+            html += `<td id="n${num}" class="${LETTERS[l]}">${num}</td>`;
+          }
+          html += "</tr>";
         }
-        html += "</tr>";
+      } else {
+        html += "<tr>" + LETTERS.map(h => `<th>${h}</th>`).join("") + "</tr>";
+        for (let i = 1; i <= CONFIG.COLS; i++) {
+          html += "<tr>";
+          html += `<td id="n${i}" class="B">${i}</td>`;
+          html += `<td id="n${i + 15}" class="I">${i + 15}</td>`;
+          html += `<td id="n${i + 30}" class="N">${i + 30}</td>`;
+          html += `<td id="n${i + 45}" class="G">${i + 45}</td>`;
+          html += `<td id="n${i + 60}" class="O">${i + 60}</td>`;
+          html += "</tr>";
+        }
       }
-    } else {
-      html += "<tr>" + LETTERS.map(h => `<th>${h}</th>`).join("") + "</tr>";
-      for (let i = 1; i <= CONFIG.COLS; i++) {
-        html += "<tr>";
-        html += `<td id="n${i}" class="B">${i}</td>`;
-        html += `<td id="n${i + 15}" class="I">${i + 15}</td>`;
-        html += `<td id="n${i + 30}" class="N">${i + 30}</td>`;
-        html += `<td id="n${i + 45}" class="G">${i + 45}</td>`;
-        html += `<td id="n${i + 60}" class="O">${i + 60}</td>`;
-        html += "</tr>";
-      }
-    }
 
-    tbody.innerHTML = html;
-    elementCache.clear();
-    state.sorteados.forEach(n => {
-      const el = elementCache.get("n" + n);
-      if (el) el.classList.add("destacado");
-    });
+      tbody.innerHTML = html;
+      elementCache.clear();
+      state.sorteados.forEach(n => {
+        const el = elementCache.get("n" + n);
+        if (el) el.classList.add("destacado");
+      });
+    } catch (e) {
+      console.error("Erro ao gerar tabela:", e);
+      showError("Erro ao gerar tabela. Recarregue a página.");
+    }
   };
 
   /**
@@ -778,6 +857,7 @@ document.addEventListener("DOMContentLoaded", () => {
     while (queue.length > 0) {
       const partIndex = index++;
       await speechManager.speak(queue.shift(), "pt-BR", CONFIG.AUDIO.rate);
+      updateSpeechButton();
 
       if (typeof onPartEnd === "function") {
         try {
@@ -803,9 +883,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const letter = getLetterFromNumber(n);
     const letterText = letterMap[letter] || letter;
 
-    await speechManager.speak(letterText, "pt-BR", CONFIG.AUDIO.rate);
-    await delay(CONFIG.TIMING.letterNumberPause);
-    await speechManager.speak(n.toLocaleString("pt-BR"), "pt-BR", CONFIG.AUDIO.rate);
+    try {
+      await speechManager.speak(letterText, "pt-BR", CONFIG.AUDIO.rate);
+      updateSpeechButton();
+      await delay(CONFIG.TIMING.letterNumberPause);
+      await speechManager.speak(n.toLocaleString("pt-BR"), "pt-BR", CONFIG.AUDIO.rate);
+      updateSpeechButton();
+    } catch (e) {
+      console.warn("Erro ao falar número:", e);
+      await delay(300);
+    }
   };
 
   /**
@@ -823,22 +910,26 @@ document.addEventListener("DOMContentLoaded", () => {
       resolvePromise = r;
     });
 
-    intervalId = setInterval(() => {
-      if (stopped) return;
-      if (prevEl) prevEl.classList.remove("roulette");
+    try {
+      intervalId = setInterval(() => {
+        if (stopped) return;
+        if (prevEl) prevEl.classList.remove("roulette");
 
-      const num = Math.floor(Math.random() * CONFIG.TOTAL_NUMBERS) + 1;
-      const el = elementCache.get("n" + num);
-      if (el) {
-        el.classList.add("roulette");
-        prevEl = el;
-      }
-    }, tickInterval);
+        const num = Math.floor(Math.random() * CONFIG.TOTAL_NUMBERS) + 1;
+        const el = elementCache.get("n" + num);
+        if (el) {
+          el.classList.add("roulette");
+          prevEl = el;
+        }
+      }, tickInterval);
+    } catch (e) {
+      console.error("Erro ao iniciar roleta:", e);
+    }
 
     const stop = (finalNum) => {
       if (stopped) return;
       stopped = true;
-      clearInterval(intervalId);
+      if (intervalId) clearInterval(intervalId);
 
       if (prevEl) prevEl.classList.remove("roulette");
 
@@ -890,6 +981,7 @@ document.addEventListener("DOMContentLoaded", () => {
    * Atualiza o botão auto mode
    */
   const updateAutoButton = () => {
+    if (!btnAuto) return;
     btnAuto.classList.toggle("active", state.autoMode);
     btnAuto.textContent = state.autoMode ? "⏹ Auto" : "🎤 Auto";
   };
@@ -980,12 +1072,14 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       await speakNumber(finalNum);
     } catch (e) {
+      console.warn("Erro na fala do número:", e);
       await delay(300);
     }
 
     roulette.stop(finalNum);
     await roulette.promise;
     hideOverlay();
+    updateSpeechButton();
   };
 
   /**
@@ -1002,302 +1096,251 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   /**
-   * Sorteia um número
+   * Função principal de sorteio
    */
   const draw = async () => {
-    if (state.rodando || state.sorteados.length >= CONFIG.TOTAL_NUMBERS) return;
+    if (state.rodando) {
+      showError(STRINGS.DRAW_IN_PROGRESS);
+      return;
+    }
 
-    if (state.autoMode) {
-      clearTimeout(autoTimer);
-      autoTimer = null;
+    if (state.sorteados.length >= CONFIG.TOTAL_NUMBERS) {
+      showError("Todos os números já foram sorteados!");
+      if (state.autoMode) {
+        state.autoMode = false;
+        updateAutoButton();
+      }
+      return;
     }
 
     state.rodando = true;
-    speechManager.cancel();
-
     try {
       const number = generateRandomNumber();
       state.sorteados.push(number);
-      const txt = getLetterFromNumber(number) + number;
-
-      await dramaticReveal(number, txt);
-
       state.ultimoSorteado = number;
-      updateDisplay(txt, getLetterFromNumber(number));
-      addToHistory(txt, getLetterFromNumber(number));
+      const letter = getLetterFromNumber(number);
+      const txt = letter + number;
 
+      addToHistory(txt, letter);
+      await dramaticReveal(number, txt);
       publishState();
-
-      if (state.sorteados.length >= CONFIG.TOTAL_NUMBERS) {
-        state.autoMode = false;
-        clearTimeout(autoTimer);
-        autoTimer = null;
-        updateAutoButton();
-        publishState();
-      } else if (state.autoMode) {
-        scheduleNextAuto();
-      }
+      scheduleNextAuto();
+    } catch (e) {
+      console.error("Erro no sorteio:", e);
+      showError("Erro ao realizar sorteio. Tente novamente.");
     } finally {
       state.rodando = false;
     }
   };
 
-  /**
-   * Repete o último número sorteado
-   */
-  const repeatLast = async () => {
-    if (!state.ultimoSorteado) return;
-
-    speechManager.cancel();
-    const n = state.ultimoSorteado;
-    const txt = getLetterFromNumber(n) + n;
-
-    showOverlay(txt);
-    try {
-      await speakNumber(n);
-    } catch (e) {
-      await delay(300);
+  const repeat = async () => {
+    if (state.rodando) {
+      showError(STRINGS.DRAW_IN_PROGRESS);
+      return;
     }
-    markCell(n);
-    hideOverlay();
+
+    if (!state.ultimoSorteado) {
+      showError("Nenhum número foi sorteado ainda!");
+      return;
+    }
+
+    state.rodando = true;
+    try {
+      const letter = getLetterFromNumber(state.ultimoSorteado);
+      const txt = letter + state.ultimoSorteado;
+      await dramaticReveal(state.ultimoSorteado, txt);
+    } catch (e) {
+      console.error("Erro na repetição:", e);
+      showError("Erro ao repetir o número. Tente novamente.");
+    } finally {
+      state.rodando = false;
+    }
   };
 
-  /**
-   * Inicia o modo automático
-   */
-  const startAutoMode = async () => {
-    if (state.autoMode) {
-      state.autoMode = false;
+  const toggleMode = () => {
+    state.modo = state.modo === "pc" ? "mobile" : "pc";
+    generateTable();
+    publishState();
+  };
+
+  const toggleAuto = async () => {
+    state.autoMode = !state.autoMode;
+    updateAutoButton();
+
+    if (state.autoMode && state.sorteados.length < CONFIG.TOTAL_NUMBERS) {
+      const delay_ms = await showDialog("Tempo entre sorteios", {
+        min: 0.5,
+        max: 120,
+        step: 0.5,
+        defaultValue: Math.round(state.autoDelayMs / 1000)
+      });
+
+      if (delay_ms === null) {
+        state.autoMode = false;
+        updateAutoButton();
+        publishState();
+        return;
+      }
+
+      state.autoDelayMs = Math.round(delay_ms * 1000);
+      scheduleNextAuto();
+    } else {
       clearTimeout(autoTimer);
-      autoTimer = null;
-      updateAutoButton();
+    }
+
+    publishState();
+  };
+
+  const newRound = async () => {
+    if (state.sorteados.length === 0) {
+      state.rodadas = [];
+      state.rodadaAtual = 1;
+      state.sorteados = [];
+      state.ultimoSorteado = null;
+      state.historico = [];
+      generateTable();
+      renderHistory();
+      updateDisplay("--", "");
       publishState();
       return;
     }
 
-    const current = Math.max(1, Math.round(state.autoDelayMs / 1000));
-    const value = await showDialog(
-      "Tempo entre sorteios automáticos (em segundos):",
-      { defaultValue: String(current), min: 0.5, max: 999 }
-    );
-
-    if (value === null) return;
-
-    state.autoDelayMs = Math.round(value * 1000);
-    state.autoMode = true;
-    updateAutoButton();
-    publishState();
-
-    if (!state.rodando && state.sorteados.length < CONFIG.TOTAL_NUMBERS) {
-      draw();
+    const confirmed = await showDialog("Confirmar", {});
+    if (confirmed !== null) {
+      recordCurrentRound();
+      state.sorteados = [];
+      state.ultimoSorteado = null;
+      state.historico = [];
+      if (state.autoMode) {
+        state.autoMode = false;
+        updateAutoButton();
+        clearTimeout(autoTimer);
+      }
+      generateTable();
+      renderHistory();
+      updateDisplay("--", "");
+      publishState();
     }
   };
 
-  /**
-   * Carrega jsPDF dinamicamente
-   * @returns {Promise<Function>} Construtor jsPDF
-   */
-  const loadjsPDF = async () => {
-    if (window.jspdf?.jsPDF) {
-      return window.jspdf.jsPDF;
-    }
-    return new Promise((resolve, reject) => {
-      const script = document.createElement("script");
-      script.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
-      script.onload = () => {
-        if (window.jspdf?.jsPDF) {
-          resolve(window.jspdf.jsPDF);
-        } else {
-          reject(new Error("jsPDF não carregou corretamente"));
-        }
-      };
-      script.onerror = () => reject(new Error("Erro ao carregar jsPDF"));
-      document.head.appendChild(script);
-    });
+  const cancelSpeech = () => {
+    speechManager.cancel();
+    updateSpeechButton();
   };
 
-  /**
-   * Exporta relatório em PDF
-   */
-  const exportPDF = async () => {
+  const generatePDF = async () => {
+    if (typeof jspdf === "undefined" || !window.jspdf) {
+      showError(STRINGS.JSPDF_NOT_FOUND);
+      return;
+    }
+
     try {
-      const jsPDF = await loadjsPDF();
-      const doc = new jsPDF({ unit: "pt", format: "a4" });
-      const now = new Date();
-      const dateTime = now.toLocaleString();
-      const W = doc.internal.pageSize.getWidth();
-      const H = doc.internal.pageSize.getHeight();
-      const M = 40, topY = 40, footerY = H - 30, maxY = footerY - 20;
-      let y = topY;
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      let yPos = 10;
 
-      const rounds = [...state.rodadas];
-      if (state.sorteados.length) {
-        rounds.push({
-          numero: state.rodadaAtual,
-          sorteados: [...state.sorteados],
-          data: dateTime
-        });
-      }
+      doc.setFontSize(14);
+      doc.text(STRINGS.ORG_NAME, pageWidth / 2, yPos, { align: "center" });
+      yPos += 10;
 
-      const addNewPage = () => {
-        doc.addPage();
-        y = topY;
-      };
+      doc.setFontSize(12);
+      doc.text(STRINGS.DOC_TITLE, pageWidth / 2, yPos, { align: "center" });
+      yPos += 10;
 
-      const drawHeader = () => {
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(14);
-        doc.text(STRINGS.ORG_NAME, W / 2, y, { align: "center" });
-        y += 14;
-
-        doc.setFontSize(13);
-        doc.text(STRINGS.DOC_TITLE, W / 2, y, { align: "center" });
-        y += 18;
-
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
-        doc.text(STRINGS.EMISSION_DATE + dateTime, M, y);
-        y += 12;
-
-        doc.text(`Evento: ${STRINGS.EVENT_NAME}`, M, y);
-        y += 14;
-
-        doc.setLineWidth(1);
-        doc.line(M, y, W - M, y);
-        y += 16;
-
-        doc.text(
-          "Aos presentes, registra-se abaixo a apuração oficial dos números sorteados durante o evento, organizados por rodada, conforme acompanhamento público realizado.",
-          M, y, { maxWidth: W - M * 2 }
-        );
-        y += 30;
-      };
-
-      const drawRoundHeader = (r, isContinuation = false) => {
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(12);
-        doc.text(
-          `${STRINGS.ROUND}${r.numero}${isContinuation ? ` ${STRINGS.CONTINUATION}` : ""}`,
-          M, y
-        );
-        y += 14;
-
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
-        doc.text(`${STRINGS.PERFORMED_AT}${r.data}`, M, y);
-        y += 14;
-
-        doc.text(`${STRINGS.TOTAL_DRAWN}${r.sorteados.length}`, M, y);
-        y += 14;
-
-        doc.setFont("helvetica", "bold");
-        LETTERS.forEach((letter, i) => doc.text(letter, X_POSITIONS[i], y));
-        y += 12;
-      };
-
-      const drawRound = (r) => {
-        const groups = { B: [], I: [], N: [], G: [], O: [] };
-        r.sorteados.forEach(n => groups[getLetterFromNumber(n)].push(n));
-        Object.values(groups).forEach(group => group.sort((a, b) => a - b));
-
-        if (y > maxY - 40) {
-          addNewPage();
-          drawHeader();
-        }
-        drawRoundHeader(r);
-
-        const maxLines = Math.max(...LETTERS.map(l => groups[l].length), 0);
-        if (!maxLines) {
-          doc.setFont("helvetica", "normal");
-          doc.setFontSize(10);
-          doc.text(STRINGS.NO_NUMBERS_DRAWN, M, y);
-          y += 18;
-          return;
-        }
-
-        for (let i = 0; i < maxLines; i++) {
-          if (y > maxY - 20) {
-            addNewPage();
-            drawHeader();
-            drawRoundHeader(r, true);
-          }
-
-          doc.setFont("helvetica", "normal");
-          doc.setFontSize(10);
-          LETTERS.forEach((letter, col) => {
-            const num = groups[letter][i];
-            if (num !== undefined) doc.text(String(num), X_POSITIONS[col], y);
-          });
-          y += 12;
-        }
-
-        y += 10;
-        if (y < maxY) {
-          doc.setLineWidth(0.5);
-          doc.line(M, y, W - M, y);
-          y += 16;
-        }
-      };
-
-      drawHeader();
-      if (!rounds.length) {
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(11);
-        doc.text(STRINGS.NO_ROUNDS_RECORDED, M, y);
-        y += 20;
-      } else {
-        rounds.forEach(drawRound);
-      }
-
-      if (y > maxY - 70) addNewPage();
-
-      doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
-      doc.line(80, y + 10, 250, y + 10);
-      doc.line(300, y + 10, 470, y + 10);
-      doc.text(STRINGS.RESPONSIBLE, 112, y + 24);
-      doc.text(STRINGS.SCHOOL_DIRECTION, 342, y + 24);
+      doc.text(STRINGS.EMISSION_DATE + new Date().toLocaleString(), 10, yPos);
+      yPos += 10;
 
-      const totalPages = doc.internal.getNumberOfPages();
-      for (let i = 1; i <= totalPages; i++) {
-        doc.setPage(i);
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(8);
-        doc.line(M, footerY - 6, W - M, footerY - 6);
-        doc.text(STRINGS.AUTO_GENERATED, M, footerY + 2);
-        doc.text(`${STRINGS.PAGE}${i}${STRINGS.OF}${totalPages}`, W - M - 70, footerY + 2);
+      if (!state.rodadas || state.rodadas.length === 0) {
+        doc.text(STRINGS.NO_ROUNDS_RECORDED, 10, yPos);
+        doc.save("bingo_relatorio.pdf");
+        return;
       }
 
-      const filename = `ata_bingo_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}.pdf`;
-      doc.save(filename);
+      state.rodadas.forEach((rodada, idx) => {
+        if (yPos > pageHeight - 20) {
+          doc.addPage();
+          yPos = 10;
+          doc.setFontSize(10);
+          doc.text(STRINGS.CONTINUATION, 10, yPos);
+          yPos += 5;
+        }
+
+        doc.setFontSize(11);
+        doc.text(`${STRINGS.ROUND} ${rodada.numero}`, 10, yPos);
+        yPos += 5;
+
+        doc.setFontSize(9);
+        doc.text(STRINGS.PERFORMED_AT + rodada.data, 10, yPos);
+        yPos += 5;
+
+        doc.text(STRINGS.TOTAL_DRAWN + rodada.sorteados.length, 10, yPos);
+        yPos += 5;
+
+        if (rodada.sorteados && rodada.sorteados.length > 0) {
+          const numbers = rodada.sorteados.join(", ");
+          const lines = doc.splitTextToSize(numbers, pageWidth - 20);
+          lines.forEach(line => {
+            if (yPos > pageHeight - 20) {
+              doc.addPage();
+              yPos = 10;
+            }
+            doc.text(line, 10, yPos);
+            yPos += 5;
+          });
+        } else {
+          doc.text(STRINGS.NO_NUMBERS_DRAWN, 10, yPos);
+          yPos += 5;
+        }
+
+        yPos += 5;
+      });
+
+      yPos += 10;
+      if (yPos > pageHeight - 40) {
+        doc.addPage();
+        yPos = 10;
+      }
+
+      doc.setFontSize(9);
+      doc.text(STRINGS.RESPONSIBLE + "________________________", 10, yPos);
+      yPos += 10;
+      doc.text(STRINGS.SCHOOL_DIRECTION + "________________________", 10, yPos);
+      yPos += 15;
+
+      doc.setFontSize(8);
+      doc.text(STRINGS.AUTO_GENERATED, pageWidth / 2, pageHeight - 10, { align: "center" });
+
+      doc.save("bingo_relatorio.pdf");
     } catch (e) {
-      console.error("Erro ao exportar PDF:", e);
-      alert(STRINGS.JSPDF_NOT_FOUND);
+      console.error("Erro ao gerar PDF:", e);
+      showError(STRINGS.ERROR_GENERATING_PDF);
     }
   };
 
-  // ========== EVENT LISTENERS ==========
-  btnSortear.addEventListener("click", draw);
-  btnRepetir.addEventListener("click", repeatLast);
-  btnModo.addEventListener("click", () => {
-    state.modo = state.modo === "pc" ? "tv" : "pc";
-    generateTable();
-    publishState();
-  });
-  btnAuto.addEventListener("click", startAutoMode);
-  btnNovo.addEventListener("click", () => {
-    if (state.rodando) return;
-    recordCurrentRound();
-    state.sorteados = [];
-    generateTable();
-    updateDisplay("--", "");
-    publishState();
-  });
-  btnPDF.addEventListener("click", exportPDF);
+  // ========== INICIALIZAÇÃO ==========
+  if (btnSortear) btnSortear.addEventListener("click", draw);
+  if (btnRepetir) btnRepetir.addEventListener("click", repeat);
+  if (btnModo) btnModo.addEventListener("click", toggleMode);
+  if (btnAuto) btnAuto.addEventListener("click", toggleAuto);
+  if (btnCancelarFala) btnCancelarFala.addEventListener("click", cancelSpeech);
+  if (btnNovo) btnNovo.addEventListener("click", newRound);
+  if (btnPDF) btnPDF.addEventListener("click", generatePDF);
 
-  // ========== INITIALIZATION ==========
+  // Keyboard navigation
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      const activeElement = document.activeElement;
+      if (activeElement && activeElement.tagName === "BUTTON") {
+        activeElement.click();
+      }
+    }
+  });
+
   generateTable();
-  updateDisplay("--", "");
+  renderHistory();
 });
 </script>
 </body>
